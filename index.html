@@ -248,7 +248,7 @@ RENDER["concrete"]=function(){
 var h='<h2>Concrete Mix Design</h2><p style="color:#aaa;font-size:12px">Per m3 - Kenyan Standards KS 573</p>';
 var grades=Object.keys(CONCRETE_MIXES);
 for(var i=0;i<grades.length;i++){var g=grades[i];var m=CONCRETE_MIXES[g];
-h+='<div class="card"><h4>'+g+'</h4><p><strong>Ratio:</strong> '+m.ratio+' (Cement:Sand:Ballast)</p><div class="row"><div><small>Cement: '+m.cement+'</small></div><div><small>Sand: '+m.sand+'</small></div><div><small>Ballast: '+m.ballast+'</small></div></div><p><small>Water: '+m.water+' | <em>'+m.use+'</em></small></p></div>';}
+h+='<div class="card"><h4>'+g+'</h4><p><strong>Ratio:</strong> '+m.ratio+' (Cement:Sand:Ballast)</p><div class="row"><div><small>Cement: '+m.cement+'</small></div><div><small>Sand: '+m.sand+'</small></div><div><small>Ballast: '+m.ballast+'</small></div></div><p><small>Water: '+m.water+' | '+m.use+'</small></p><p style="font-size:10px;color:#ff9f0a">1 bag cement needs: '+m.ratio.split(' (')[0]+' (sand:ballast) + '+m.water+' water</p></div>';}
 return h;
 };
 // LABOUR

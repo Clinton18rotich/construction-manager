@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concrete & Mortar Calculator</title>
+<style>
+body{font-family:Arial;background:#0a0a0a;color:#fff;padding:15px;max-width:900px;margin:0 auto}
+.card{background:#1c1c1e;padding:12px;border-radius:10px;margin:8px 0;border:1px solid #333}
+h2{color:#ff9f0a;font-size:20px}h3{color:#ff9f0a;font-size:16px}h4{font-size:14px;color:#ff9f0a;margin:10px 0 5px}
+label{display:block;margin:8px 0 3px;color:#aaa;font-size:11px;font-weight:bold}
+input,select{width:100%;padding:10px;background:#1c1c1e;border:1px solid #333;color:#fff;border-radius:8px;font-size:14px;margin-bottom:5px}
+.row{display:flex;gap:8px}.row>*{flex:1}
+.result{background:#111;padding:12px;border-radius:8px;margin-top:10px}
+.btn{background:#ff9f0a;color:#000;border:none;padding:10px 20px;border-radius:8px;font-weight:bold;cursor:pointer;margin:5px 0}
+.chip{display:inline-block;background:#333;padding:4px 10px;border-radius:12px;margin:2px;font-size:12px}
+.tab{display:flex;gap:4px;margin:10px 0}
+.tab button{flex:1;padding:10px;background:#1c1c1e;color:#fff;border:1px solid #333;border-radius:8px;cursor:pointer;font-size:12px}
+.tab button.active{background:#ff9f0a;color:#000;font-weight:bold}
+.guide p{margin:3px 0;font-size:12px}
+.guide b{color:#ff9f0a}
+</style>
+</head>
+<body>
+
+<h2>CONCRETE & MORTAR CALCULATOR</h2>
+
+<div class="tab">
+<button id="btnCalc" class="active" onclick="showTab('calc')">Calculator</button>
+<button id="btnRef" onclick="showTab('ref')">Mix Reference</button>
+<button id="btnTest" onclick="showTab('test')">Field Tests</button>
+<button id="btnAdmix" onclick="showTab('admix')">Admixtures</button>
+</div>
+
+<div id="tabCalc">
+<div class="card">
+<label>Mix Type:</label>
+<select id="mt" onchange="update()">
+<option value="concrete">Concrete (Structural)</option>
+<option value="mortar">Mortar (Blockwork/Plaster)</option>
+</select>
+</div>
+<div class="card" id="calcCard">
+<h4>Calculator</h4>
+<label>Structure/Area:</label>
+<select id="ct" onchange="updateDims()">
+<option value="slab">Slab / Floor</option>
+<option value="beam">Beam</option>
+<option value="column">Column</option>
+<option value="footing">Footing / Pad</option>
+<option value="wall">Wall</option>
+<option value="cylinder">Circular Column</option>
+</select>
+<div id="cd"></div>
+<label>Grade:</label><select id="cg" onchange="calc()"></select>
+<label>Wastage:</label>
+<select id="cw" onchange="calc()"><option value="1">0%</option><option value="1.05" selected>5%</option><option value="1.1">10%</option></select>
+<div class="result" id="cr"></div>
+</div>
+</div>
+
+<div id="tabRef" style="display:none">
+<h3>Concrete Mixes (per m3)</h3>
+<div id="refConcrete"></div>
+<h3 style="margin-top:15px">Mortar Mixes (per m3)</h3>
+<div id="refMortar"></div>
+<h3 style="margin-top:15px">Batching Guide</h3>
+<div class="card guide">
+<p><b>1 bag cement</b> = 50kg = 0.035 m3</p>
+<p><b>1 wheelbarrow</b> = ~0.065 m3 (65 litres)</p>
+<p><b>1 bucket (20L)</b> = 0.02 m3 = 3.5 buckets per bag volume</p>
+<p><b>For C25 1:2:4 per bag:</b> 2 wheelbarrows sand + 4 wheelbarrows ballast + 25L water</p>
+</div>
+</div>
+
+<div id="tabTest" style="display:none">
+<div class="card guide">
+<h4>Slump Test (Workability)</h4>
+<p><b>Equipment:</b> Slump cone (300mm high), tamping rod 16mm, base plate</p>
+<p><b>Target:</b> 50-100mm for normal RC | 25-50mm for pavements | 100-150mm for pumped</p>
+<p><b>Procedure:</b> Fill cone in 3 equal layers, rod each layer 25 times, strike off top, lift cone vertically in 5 seconds, measure slump (drop from original height)</p>
+<p><b>Fail if:</b> Concrete collapses (too wet), shears off (no cohesion), or zero slump (too dry)</p>
+</div>
+<div class="card guide">
+<h4>Cube Test (Compressive Strength)</h4>
+<p><b>Mould:</b> 150mm x 150mm x 150mm steel or cast iron</p>
+<p><b>Sample:</b> Cast minimum 3 cubes per batch</p>
+<p><b>Curing:</b> Submerge in clean water at 20-25C until testing</p>
+<p><b>7-day strength:</b> Should reach 60-70% of design strength</p>
+<p><b>28-day strength:</b> Full design strength (e.g. C25 = 25 N/mm2 minimum)</p>
+<p><b>Testing:</b> Apply load at 0.2-0.4 N/mm2/sec until failure. Calculate: Failure Load / Cube Area</p>
+</div>
+<div class="card guide">
+<h4>Site Quick Tests</h4>
+<p><b>Ball Test:</b> Squeeze handful of concrete - should hold shape, not crumble or bleed water</p>
+<p><b>Trowel Test:</b> Pat surface with trowel - should float smooth, paste should cover aggregate</p>
+<p><b>Water Test:</b> Compact concrete - no free water should rise to surface</p>
+<p><b>Segregation Test:</b> Drop small amount - coarse aggregate should stay mixed in mortar</p>
+<p><b>Temperature:</b> Concrete should be 10-32C at placement (ideal 15-25C)</p>
+</div>
+<div class="card guide">
+<h4>Curing Requirements</h4>
+<p><b>Normal weather:</b> Keep continuously wet for 7 days minimum</p>
+<p><b>Ponding:</b> Create water pond on horizontal surfaces - best method</p>
+<p><b>Hessian/Sacking:</b> Cover with wet hessian, keep constantly damp</p>
+<p><b>Spraying/Fogging:</b> Mist spray 3-4 times daily - don't let surface dry between sprays</p>
+<p><b>Curing Compound:</b> Spray apply immediately after finishing at 1L per 4-5m2</p>
+<p><b>Formwork:</b> Keep in place: columns 2 days, beams/slabs 7-14 days</p>
+<p><b>Hot weather (>30C):</b> Start curing within 30 minutes, use shade/windbreaks</p>
+<p><b>Cold weather (<5C):</b> Use warm water, protect with blankets, keep above 5C for 72hrs</p>
+</div>
+</div>
+
+<div id="tabAdmix" style="display:none">
+<div class="card guide">
+<h4>Concrete Admixtures Guide</h4>
+<p><b>Waterproofer (Liquid):</b> 200ml per 50kg bag - mix with water before adding</p>
+<p><b>Waterproofer (Powder):</b> 1kg per 50kg bag - mix dry with cement first</p>
+<p><b>Accelerator:</b> 1-2L per 50kg bag - use in cold weather to speed up setting</p>
+<p><b>Retarder:</b> 0.5-1L per 50kg bag - use in hot weather to delay setting</p>
+<p><b>Plasticiser:</b> 150ml per 50kg bag - reduces water by 10-15%, improves workability</p>
+<p><b>Superplasticiser:</b> 0.5-1.5L per 50kg bag - high water reduction, flowing concrete</p>
+<p><b>Bonding Agent (SBR):</b> 1:1 with water as primer, 1:4 cement:SBR slurry for bonding new to old</p>
+<p><b>Curing Compound:</b> Apply 1L per 4-5m2 with sprayer after finishing</p>
+<p><b>Air Entrainer:</b> 50-100ml per 50kg bag - improves freeze-thaw resistance</p>
+<p><b>Shrinkage Reducer:</b> 2-3L per m3 - reduces drying shrinkage cracking</p>
+<p><b>Corrosion Inhibitor:</b> 3-5L per m3 - for marine/saline/coastal environments</p>
+<p><b>Colouring Pigment:</b> 2-5kg per 50kg bag - integral concrete colour</p>
+<p><b>Fibres (Polypropylene):</b> 900g per m3 - reduces plastic shrinkage cracking</p>
+<p><b>Fibres (Steel):</b> 20-40kg per m3 - increases tensile strength for industrial floors</p>
+</div>
+</div>
+
+<script>
+var CONCRETE={
+"C15/20 Blinding":{ratio:"1:3:6",cement:"250",sand:"0.45",ballast:"0.9",water:"125",use:"Blinding, lean concrete, non-structural"},
+"C20/25 Light Duty":{ratio:"1:2.5:5",cement:"300",sand:"0.44",ballast:"0.88",water:"150",use:"Light duty floors, paths, mass concrete"},
+"C25/30 General RC":{ratio:"1:2:4",cement:"350",sand:"0.42",ballast:"0.84",water:"175",use:"Slabs, beams, columns, general RC work"},
+"C30/37 Heavy Duty":{ratio:"1:2:3",cement:"400",sand:"0.40",ballast:"0.80",water:"200",use:"Heavy duty floors, water retaining structures"},
+"C35/45 Precast":{ratio:"1:1.5:3",cement:"450",sand:"0.38",ballast:"0.76",water:"200",use:"Precast elements, high strength"},
+"C40/50 High Strength":{ratio:"1:1.5:2.5",cement:"500",sand:"0.36",ballast:"0.72",water:"200",use:"Bridge works, special structures"}
+};
+var MORTAR={
+"Blockwork 1:4":{ratio:"1:4",cement:"350",sand:"1.0",water:"175",use:"Standard blockwork, internal walls"},
+"Blockwork 1:3":{ratio:"1:3",cement:"450",sand:"0.95",water:"200",use:"Heavy blockwork, external/retaining walls"},
+"Plaster 1:4 (Internal)":{ratio:"1:4",cement:"300",sand:"0.85",water:"150",use:"Internal plaster on walls & ceilings"},
+"Plaster 1:3 (External)":{ratio:"1:3",cement:"400",sand:"0.80",water:"180",use:"External rendering, wet areas"},
+"Screed 1:3":{ratio:"1:3",cement:"450",sand:"0.90",water:"200",use:"Floor screed 50mm thick"},
+"Tiling Bedding 1:2":{ratio:"1:2",cement:"600",sand:"0.60",water:"280",use:"Tile bedding mortar, thick bed"},
+"Pointing/Jointing 1:1":{ratio:"1:1",cement:"900",sand:"0.50",water:"400",use:"Tile grouting, pointing work"}
+};
+var EXPLAIN={
+"C15/20 Blinding":"1 bag cement : 3 wheelbarrows sand : 6 wheelbarrows ballast : 25L water",
+"C20/25 Light Duty":"1 bag cement : 2.5 wheelbarrows sand : 5 wheelbarrows ballast : 25L water",
+"C25/30 General RC":"1 bag cement : 2 wheelbarrows sand : 4 wheelbarrows ballast : 25L water",
+"C30/37 Heavy Duty":"1 bag cement : 2 wheelbarrows sand : 3 wheelbarrows ballast : 25L water",
+"C35/45 Precast":"1 bag cement : 1.5 wheelbarrows sand : 3 wheelbarrows ballast : 22L water",
+"C40/50 High Strength":"1 bag cement : 1.5 wheelbarrows sand : 2.5 wheelbarrows ballast : 20L water",
+"Blockwork 1:4":"1 bag cement : 4 wheelbarrows sand : 25L water",
+"Blockwork 1:3":"1 bag cement : 3 wheelbarrows sand : 22L water",
+"Plaster 1:4 (Internal)":"1 bag cement : 4 wheelbarrows sand : 25L water",
+"Plaster 1:3 (External)":"1 bag cement : 3 wheelbarrows sand : 22L water",
+"Screed 1:3":"1 bag cement : 3 wheelbarrows sand : 22L water",
+"Tiling Bedding 1:2":"1 bag cement : 2 wheelbarrows sand : 22L water",
+"Pointing/Jointing 1:1":"1 bag cement : 1 wheelbarrow sand : 22L water"
+};
+
+function showTab(t){
+document.querySelectorAll('[id^=tab]').forEach(function(el){if(el.id.startsWith('tab')&&el.id!=='tabCalc'&&el.id!=='tabRef'&&el.id!=='tabTest'&&el.id!=='tabAdmix')return;el.style.display='none';});
+document.getElementById('tab'+t.charAt(0).toUpperCase()+t.slice(1)).style.display='block';
+document.querySelectorAll('.tab button').forEach(function(b){b.classList.remove('active');});
+document.getElementById('btn'+t.charAt(0).toUpperCase()+t.slice(1)).classList.add('active');
+}
+
+function update(){
+var t=document.getElementById("mt").value;
+var s=document.getElementById("ct");
+var h="";
+if(t==="concrete"){
+s.innerHTML='<option value="slab">Slab / Floor</option><option value="beam">Beam</option><option value="column">Column</option><option value="footing">Footing / Pad</option><option value="wall">Wall</option><option value="cylinder">Circular Column</option>';
+}else{
+s.innerHTML='<option value="wall_area">Wall Area (m2)</option><option value="floor_area">Floor Area (m2)</option><option value="volume">Direct Volume (m3)</option>';
+}
+var g=document.getElementById("cg");
+var data=t==="concrete"?CONCRETE:MORTAR;
+var keys=Object.keys(data);
+g.innerHTML='';for(var i=0;i<keys.length;i++){g.innerHTML+='<option>'+keys[i]+'</option>';}
+updateDims();
+}
+
+function updateDims(){
+var t=document.getElementById("mt").value;
+var s=document.getElementById("ct").value;
+var d=document.getElementById("cd");var h="";
+if(t==="concrete"){
+if(s=="slab")h='<div class="row"><div>Length (m):<br><input id="cl" type="number" value="5" step="0.1" onchange="calc()"></div><div>Width (m):<br><input id="cw2" type="number" value="4" step="0.1" onchange="calc()"></div></div>Thickness (mm):<br><input id="ch" type="number" value="150" onchange="calc()">';
+else if(s=="beam")h='Length (m):<br><input id="cl" type="number" value="6" step="0.1" onchange="calc()"><div class="row"><div>Width (mm):<br><input id="cw2" type="number" value="230" onchange="calc()"></div><div>Depth (mm):<br><input id="ch" type="number" value="450" onchange="calc()"></div></div>';
+else if(s=="column")h='<div class="row"><div>Width (mm):<br><input id="cw2" type="number" value="230" onchange="calc()"></div><div>Depth (mm):<br><input id="ch" type="number" value="230" onchange="calc()"></div></div>Height (m):<br><input id="cl" type="number" value="3" step="0.1" onchange="calc()">';
+else if(s=="footing")h='<div class="row"><div>Length (m):<br><input id="cl" type="number" value="1.5" step="0.1" onchange="calc()"></div><div>Width (m):<br><input id="cw2" type="number" value="1.5" step="0.1" onchange="calc()"></div></div>Thickness (mm):<br><input id="ch" type="number" value="300" onchange="calc()">';
+else if(s=="wall")h='Length (m):<br><input id="cl" type="number" value="10" step="0.1" onchange="calc()"><div class="row"><div>Thickness (mm):<br><input id="cw2" type="number" value="200" onchange="calc()"></div><div>Height (m):<br><input id="ch" type="number" value="2.5" step="0.1" onchange="calc()"></div></div>';
+else if(s=="cylinder")h='Diameter (mm):<br><input id="cw2" type="number" value="300" onchange="calc()">Height (m):<br><input id="cl" type="number" value="3" step="0.1" onchange="calc()">';
+}else{
+if(s=="wall_area")h='Wall Area (m2):<br><input id="cl" type="number" value="50" step="0.1" onchange="calc()">Joint/Block Thickness (mm):<br><input id="ch" type="number" value="150" onchange="calc()">';
+else if(s=="floor_area")h='Floor Area (m2):<br><input id="cl" type="number" value="20" step="0.1" onchange="calc()">Screed Thickness (mm):<br><input id="ch" type="number" value="50" onchange="calc()">';
+else if(s=="volume")h='Volume (m3):<br><input id="cl" type="number" value="1" step="0.1" onchange="calc()">';
+}
+d.innerHTML=h;calc();
+}
+
+function calc(){
+var t=document.getElementById("mt").value;
+var s=document.getElementById("ct").value;
+var l=parseFloat((document.getElementById("cl")||{}).value)||0;
+var w=parseFloat((document.getElementById("cw2")||{}).value)||0;
+var hh=parseFloat((document.getElementById("ch")||{}).value)||0;
+var vol=0;
+if(t==="concrete"){
+if(s=="slab")vol=l*w*(hh/1000);
+else if(s=="beam")vol=l*(w/1000)*(hh/1000);
+else if(s=="column")vol=(w/1000)*(hh/1000)*l;
+else if(s=="footing")vol=l*w*(hh/1000);
+else if(s=="wall")vol=l*(w/1000)*hh;
+else if(s=="cylinder")vol=Math.PI*Math.pow(w/2000,2)*l;
+}else{
+if(s=="wall_area"||s=="floor_area")vol=l*(hh/1000);
+else vol=l;
+}
+var waste=parseFloat((document.getElementById("cw")||{}).value)||1;vol*=waste;
+var gr=document.getElementById("cg").value;
+var data=t==="concrete"?CONCRETE:MORTAR;
+var mx=data[gr]||{};
+var cem=parseFloat(mx.cement)||0;
+var cb=Math.ceil((vol*cem)/50);
+var sd=(vol*parseFloat(mx.sand)||0).toFixed(2);
+var bl=mx.ballast?(vol*parseFloat(mx.ballast)||0).toFixed(2):null;
+var wt=Math.round(vol*parseFloat(mx.water)||0);
+var r=document.getElementById("cr");
+var txt='<b style="color:#ff9f0a">RESULTS</b><br>Volume: <b>'+vol.toFixed(3)+' m3</b> (incl. wastage)<br><br><b>Cement:</b> '+cb+' bags ('+(cb*50)+' kg)';
+txt+='<br><b>Sand:</b> '+sd+' m3';
+if(bl)txt+='<br><b>Ballast:</b> '+bl+' m3';
+txt+='<br><b>Water:</b> ~'+wt+' litres';
+txt+='<br><br><small style="color:#ff9f0a">'+mx.ratio+' | '+(EXPLAIN[gr]||"")+'</small>';
+r.innerHTML=txt;
+}
+
+// Build reference cards
+var refC="",refM="";
+var ck=Object.keys(CONCRETE);
+for(var i=0;i<ck.length;i++){var g=ck[i];var m=CONCRETE[g];
+refC+='<div class="card"><b>'+g+'</b><br>Ratio: '+m.ratio+' | Cement: '+m.cement+' kg | Sand: '+m.sand+' m3 | Ballast: '+m.ballast+' m3<br>Water: '+m.water+'L | '+m.use+'<br><small style="color:#ff9f0a">'+(EXPLAIN[g]||"")+'</small></div>';
+}
+var mk=Object.keys(MORTAR);
+for(var i=0;i<mk.length;i++){var g=mk[i];var m=MORTAR[g];
+refM+='<div class="card"><b>'+g+'</b><br>Ratio: '+m.ratio+' | Cement: '+m.cement+' kg | Sand: '+m.sand+' m3<br>Water: '+m.water+'L | '+m.use+'<br><small style="color:#ff9f0a">'+(EXPLAIN[g]||"")+'</small></div>';
+}
+document.getElementById("refConcrete").innerHTML=refC;
+document.getElementById("refMortar").innerHTML=refM;
+
+update();
+</script>
+</body>
+</html>
