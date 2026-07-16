@@ -42,11 +42,14 @@ th{background:#1c1c1e;color:#ff9f0a;font-size:11px}
 .report-preview th{background:#ddd}
 .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#ff9f0a;color:#000;padding:10px 20px;border-radius:20px;font-weight:bold;display:none;z-index:1000}
 @media print{body{background:#fff;color:#000}.header,.nav,.btn,.toast{display:none}.content{padding:0}.report-preview{border-radius:0}}
+.hamburger{position:absolute;left:10px;top:10px;font-size:24px;cursor:pointer;color:#ff9f0a;z-index:101;background:none;border:none}.sidebar{position:fixed;top:0;left:-280px;width:260px;height:100%;background:#111;z-index:200;transition:left 0.3s;overflow-y:auto;padding:60px 15px 20px;box-shadow:2px 0 10px rgba(0,0,0,0.5)}.sidebar.open{left:0}.sidebar button{display:block;width:100%;text-align:left;padding:12px;background:none;color:#fff;border:none;font-size:13px;cursor:pointer;border-radius:8px;margin:2px 0}.sidebar button.active{background:#ff9f0a;color:#000;font-weight:bold}.sidebar button:hover{background:#333}.overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:199;display:none}.overlay.show{display:block}.header{position:relative;text-align:center}
 </style>
 </head>
 <body>
-<div class="header"><h1>CONSTRUCTION MANAGER</h1><div style="margin-top:5px"><input type="date" id="globalDatePicker" onchange="setGlobalDate(this.value)" style="width:auto;display:inline-block;font-size:12px;text-align:center;background:#333;color:#ff9f0a;border:1px solid #ff9f0a;border-radius:6px;padding:4px 8px"> <small style="color:#aaa" id="globalDateLabel"></small></div></div>
-<div class="nav" id="nav"></div>
+<div class="header"><button class="hamburger" onclick="toggleMenu()">☰</button><h1>CONSTRUCTION MANAGER</h1><div style="margin-top:5px"><input type="date" id="globalDatePicker" onchange="setGlobalDate(this.value)" style="width:auto;display:inline-block;font-size:12px;text-align:center;background:#333;color:#ff9f0a;border:1px solid #ff9f0a;border-radius:6px;padding:4px 8px"> <small style="color:#aaa" id="globalDateLabel"></small></div></div>
+<div class="overlay" id="overlay" onclick="toggleMenu()"></div>
+<div class="sidebar" id="sidebar"></div>
+<div class="nav" id="nav" style="display:none"></div>
 <div class="content" id="content"></div>
 <div class="toast" id="toast"></div>
 <script>
@@ -108,8 +111,14 @@ var CONCRETE_MIXES={"C15/20 Blinding":{"ratio":"1:3:6","cement":"250kg (5 bags)"
 // ============ NAVIGATION ============
 var NAV=[{id:"dashboard",label:"Home"},{id:"diary",label:"Diary"},{id:"inspections",label:"Inspections"},{id:"ncr",label:"NCRs"},{id:"instructions",label:"S.I."},{id:"materials",label:"Materials"},{id:"stock",label:"Stock"},{id:"cubes",label:"Cubes"},{id:"concrete",label:"Concrete"},{id:"labour",label:"Labour"},{id:"plant",label:"Plant"},{id:"meetings",label:"Meetings"},{id:"delays",label:"Delays"},{id:"drawings",label:"Drawings"},{id:"rfi",label:"RFIs"},{id:"stopwork",label:"Stop Work"},{id:"rejections",label:"Rejections"},{id:"report",label:"REPORT"},{id:"project",label:"Settings"}];
 var current="dashboard";
-function nav(){var h="";for(var i=0;i<NAV.length;i++){h+='<button class="'+(NAV[i].id===current?"active":"")+'" onclick="go(\''+NAV[i].id+'\')">'+NAV[i].label+'</button>';}document.getElementById("nav").innerHTML=h;var gdp=document.getElementById("globalDatePicker");if(gdp){gdp.value=globalDate;gdp.max=today();}var gdl=document.getElementById("globalDateLabel");if(gdl)gdl.textContent=fmtGlobalDate();}
-function go(id){current=id;nav();document.getElementById("content").innerHTML=RENDER[id]?RENDER[id]():"";if(id!=="report")bindInputs();window.scrollTo(0,0);}
+function nav(){
+var h="";for(var i=0;i<NAV.length;i++){h+='<button class="'+(NAV[i].id===current?"active":"")+'" onclick="go(\''+NAV[i].id+'\')">'+NAV[i].label+'</button>';}
+document.getElementById("sidebar").innerHTML=h;
+var gdp=document.getElementById("globalDatePicker");if(gdp){gdp.value=globalDate;gdp.max=today();}
+var gdl=document.getElementById("globalDateLabel");if(gdl)gdl.textContent=fmtGlobalDate();
+}
+function toggleMenu(){var s=document.getElementById("sidebar");var o=document.getElementById("overlay");if(s.classList.contains("open")){s.classList.remove("open");o.classList.remove("show");}else{s.classList.add("open");o.classList.add("show");}}
+function go(id){current=id;nav();document.getElementById("content").innerHTML=RENDER[id]?RENDER[id]():"";if(id!=="report")bindInputs();window.scrollTo(0,0);var s=document.getElementById("sidebar");if(s)s.classList.remove("open");var o=document.getElementById("overlay");if(o)o.classList.remove("show");}
 function bindInputs(){document.querySelectorAll("input,select,textarea").forEach(function(el){el.addEventListener("input",function(){if(this.id&&this.id.startsWith("_"))return;if(this.id)D[this.id]=this.value;save();});if(D[el.id]!==undefined&&el.type!=="file")el.value=D[el.id];});}
 // ============ RENDERERS ============
 var SI_CATEGORIES=["Instruct contractor to rectify defective work","Accelerate works to recover delay","Submit method statement for approval","Provide material samples for approval","Increase labour force at ___","Provide additional plant/equipment","Comply with safety requirements","Submit updated programme","Submit as-built drawings","Submit test results for ___","Stop work at ___ until further notice","Provide access for inspection","Protect completed works","Clean site / remove debris","Submit variation quotation","Other"];

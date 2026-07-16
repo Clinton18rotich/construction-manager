@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Concrete Calculator Test</title>
+<style>
+body{font-family:Arial;background:#0a0a0a;color:#fff;padding:20px}
+.card{background:#1c1c1e;padding:12px;border-radius:10px;margin:10px 0}
+.btn{background:#ff9f0a;color:#000;padding:10px 20px;border:none;border-radius:8px;font-weight:bold}
+input,select{width:100%;padding:8px;background:#333;color:#fff;border:1px solid #555;border-radius:6px;margin:5px 0}
+.row{display:flex;gap:10px}.row>*{flex:1}
+</style>
+</head>
+<body>
+<h2>Concrete Calculator</h2>
+
+<div class="card">
+<label>Type:</label>
+<select id="ct" onchange="update()">
+<option value="slab">Slab</option>
+<option value="beam">Beam</option>
+<option value="column">Column</option>
+<option value="footing">Footing</option>
+<option value="wall">Wall</option>
+<option value="cylinder">Circular Column</option>
+</select>
+<div id="cd"></div>
+<label>Grade:</label>
+<select id="cg" onchange="update()">
+<option>C15/20 Blinding</option>
+<option>C20/25 Light Duty</option>
+<option selected>C25/30 General RC</option>
+<option>C30/37 Heavy Duty</option>
+<option>C35/45 Precast</option>
+<option>C40/50 High Strength</option>
+</select>
+<label>Wastage:</label>
+<select id="cw" onchange="update()">
+<option value="1">0%</option><option value="1.05" selected>5%</option><option value="1.1">10%</option>
+</select>
+<div id="cr" style="margin-top:10px;padding:10px;background:#111;border-radius:8px"></div>
+</div>
+
+<div id="ref"></div>
+
+<script>
+var M={
+"C15/20 Blinding":{ratio:"1:3:6",cement:"250",sand:"0.45",ballast:"0.9",water:"125",use:"Blinding"},
+"C20/25 Light Duty":{ratio:"1:2.5:5",cement:"300",sand:"0.44",ballast:"0.88",water:"150",use:"Light duty"},
+"C25/30 General RC":{ratio:"1:2:4",cement:"350",sand:"0.42",ballast:"0.84",water:"175",use:"General RC"},
+"C30/37 Heavy Duty":{ratio:"1:2:3",cement:"400",sand:"0.40",ballast:"0.80",water:"200",use:"Heavy duty"},
+"C35/45 Precast":{ratio:"1:1.5:3",cement:"450",sand:"0.38",ballast:"0.76",water:"200",use:"Precast"},
+"C40/50 High Strength":{ratio:"1:1.5:2.5",cement:"500",sand:"0.36",ballast:"0.72",water:"200",use:"High strength"}
+};
+var E={
+"C15/20 Blinding":"1 bag : 3 wheelbarrows sand : 6 ballast : 25L water",
+"C20/25 Light Duty":"1 bag : 2.5 wheelbarrows sand : 5 ballast : 25L water",
+"C25/30 General RC":"1 bag : 2 wheelbarrows sand : 4 ballast : 25L water",
+"C30/37 Heavy Duty":"1 bag : 2 wheelbarrows sand : 3 ballast : 25L water",
+"C35/45 Precast":"1 bag : 1.5 wheelbarrows sand : 3 ballast : 22L water",
+"C40/50 High Strength":"1 bag : 1.5 wheelbarrows sand : 2.5 ballast : 20L water"
+};
+
+function update(){
+var t=document.getElementById("ct").value;
+var d=document.getElementById("cd");
+var h="";
+if(t=="slab")h='<div class="row"><div>Length (m):<br><input id="cl" type="number" value="5" step="0.1" onchange="update()"></div><div>Width (m):<br><input id="cw2" type="number" value="4" step="0.1" onchange="update()"></div></div>Thickness (mm):<br><input id="ch" type="number" value="150" onchange="update()">';
+else if(t=="beam")h='Length (m):<br><input id="cl" type="number" value="6" step="0.1" onchange="update()"><div class="row"><div>Width (mm):<br><input id="cw2" type="number" value="230" onchange="update()"></div><div>Depth (mm):<br><input id="ch" type="number" value="450" onchange="update()"></div></div>';
+else if(t=="column")h='<div class="row"><div>Width (mm):<br><input id="cw2" type="number" value="230" onchange="update()"></div><div>Depth (mm):<br><input id="ch" type="number" value="230" onchange="update()"></div></div>Height (m):<br><input id="cl" type="number" value="3" step="0.1" onchange="update()">';
+else if(t=="footing")h='<div class="row"><div>Length (m):<br><input id="cl" type="number" value="1.5" step="0.1" onchange="update()"></div><div>Width (m):<br><input id="cw2" type="number" value="1.5" step="0.1" onchange="update()"></div></div>Thickness (mm):<br><input id="ch" type="number" value="300" onchange="update()">';
+else if(t=="wall")h='Length (m):<br><input id="cl" type="number" value="10" step="0.1" onchange="update()"><div class="row"><div>Thickness (mm):<br><input id="cw2" type="number" value="200" onchange="update()"></div><div>Height (m):<br><input id="ch" type="number" value="2.5" step="0.1" onchange="update()"></div></div>';
+else if(t=="cylinder")h='Diameter (mm):<br><input id="cw2" type="number" value="300" onchange="update()">Height (m):<br><input id="cl" type="number" value="3" step="0.1" onchange="update()">';
+d.innerHTML=h;
+calc();
+}
+
+function calc(){
+var t=document.getElementById("ct").value;
+var l=parseFloat((document.getElementById("cl")||{}).value)||0;
+var w=parseFloat((document.getElementById("cw2")||{}).value)||0;
+var hh=parseFloat((document.getElementById("ch")||{}).value)||0;
+var vol=0;
+if(t=="slab")vol=l*w*(hh/1000);
+else if(t=="beam")vol=l*(w/1000)*(hh/1000);
+else if(t=="column")vol=(w/1000)*(hh/1000)*l;
+else if(t=="footing")vol=l*w*(hh/1000);
+else if(t=="wall")vol=l*(w/1000)*hh;
+else if(t=="cylinder")vol=Math.PI*Math.pow(w/2000,2)*l;
+var waste=parseFloat(document.getElementById("cw").value)||1;vol*=waste;
+var gr=document.getElementById("cg").value;var mx=M[gr]||{};
+var cem=parseFloat(mx.cement)||0;
+var cb=Math.ceil((vol*cem)/50);
+var sd=(vol*parseFloat(mx.sand)||0).toFixed(2);
+var bl=(vol*parseFloat(mx.ballast)||0).toFixed(2);
+var wt=Math.round(vol*parseFloat(mx.water)||0);
+document.getElementById("cr").innerHTML='<b style="color:#ff9f0a">Results</b><br>Volume: <b>'+vol.toFixed(3)+' m3</b><br><br><b>Cement:</b> '+cb+' bags ('+(cb*50)+' kg)<br><b>Sand:</b> '+sd+' m3<br><b>Ballast:</b> '+bl+' m3<br><b>Water:</b> ~'+wt+' litres<br><small>Mix: '+mx.ratio+' | '+(E[gr]||"")+'</small>';
+}
+
+// Reference cards
+var ref="<h3>Mix Reference</h3>";
+var gk=Object.keys(M);
+for(var i=0;i<gk.length;i++){var g=gk[i];var m=M[g];
+ref+='<div class="card"><b>'+g+'</b><br>Ratio: '+m.ratio+'<br>Cement: '+m.cement+' kg | Sand: '+m.sand+' m3 | Ballast: '+m.ballast+' m3<br>Water: '+m.water+'L | '+m.use+'<br><small style="color:#ff9f0a">'+(E[g]||"")+'</small></div>';
+}
+document.getElementById("ref").innerHTML=ref;
+
+update();
+</script>
+</body>
+</html>

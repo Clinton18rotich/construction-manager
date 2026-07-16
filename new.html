@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Construction Manager</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#0a0a0a;color:#fff}
+.header{background:#1a1a1a;padding:12px;text-align:center;border-bottom:2px solid #ff9f0a;position:sticky;top:0;z-index:100}
+.header h1{color:#ff9f0a;font-size:18px}
+.nav{display:flex;overflow-x:auto;background:#1c1c1e;gap:4px;padding:8px;position:sticky;top:56px;z-index:99}
+.nav button{flex:0 0 auto;background:#2c2c2e;color:#fff;border:none;padding:8px 12px;border-radius:20px;cursor:pointer;white-space:nowrap;font-size:12px}
+.nav button.active{background:#ff9f0a;color:#000;font-weight:bold}
+.content{padding:15px;max-width:900px;margin:0 auto;padding-bottom:100px}
+label{display:block;margin:10px 0 3px;color:#aaa;font-size:12px;font-weight:bold}
+input,select,textarea{width:100%;padding:10px;background:#1c1c1e;border:1px solid #333;color:#fff;border-radius:8px;font-size:14px;margin-bottom:5px}
+textarea{min-height:70px;resize:vertical}
+.btn{background:#ff9f0a;color:#000;border:none;padding:10px 20px;border-radius:8px;font-weight:bold;cursor:pointer;margin:8px 4px 8px 0;font-size:13px}
+.btn-blue{background:#0a84ff;color:#fff}
+.btn-red{background:#ff3b30;color:#fff}
+.btn-green{background:#30d158;color:#000}
+.btn-sm{padding:6px 12px;font-size:11px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1;min-width:120px}
+table{width:100%;border-collapse:collapse;margin:8px 0;font-size:12px}
+th,td{border:1px solid #333;padding:5px;text-align:left;vertical-align:top}
+th{background:#1c1c1e;color:#ff9f0a;font-size:11px}
+.card{background:#1c1c1e;border-radius:10px;padding:12px;margin:8px 0;border:1px solid #333}
+.card h4{margin-bottom:8px;color:#ff9f0a}
+.chip{display:inline-block;background:#333;color:#fff;padding:4px 10px;border-radius:12px;margin:2px;font-size:11px;cursor:pointer}
+.chip.selected{background:#ff9f0a;color:#000}
+.chip-grid{display:flex;flex-wrap:wrap;gap:4px;margin:5px 0}
+.tag{display:inline-block;padding:3px 8px;border-radius:10px;font-size:10px;margin:2px}
+.tag-pass{background:#30d158;color:#000}
+.tag-fail{background:#ff3b30;color:#fff}
+.tag-open{background:#ff9f0a;color:#000}
+.tag-closed{background:#30d158;color:#000}
+.report-preview{background:#fff;color:#000;padding:20px;border-radius:8px;font-family:'Courier New',monospace;font-size:11px;line-height:1.5}
+.report-preview h3{text-align:center;text-transform:uppercase;font-size:13px}
+.report-preview h4{font-size:12px;margin-top:10px}
+.report-preview hr{border:1px solid #000}
+.report-preview table{border:1px solid #000;font-size:10px}
+.report-preview th,.report-preview td{border:1px solid #000;color:#000;padding:3px}
+.report-preview th{background:#ddd}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#ff9f0a;color:#000;padding:10px 20px;border-radius:20px;font-weight:bold;display:none;z-index:1000}
+.modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:200;display:none;align-items:center;justify-content:center}
+.modal.show{display:flex}
+.modal-content{background:#1c1c1e;padding:20px;border-radius:12px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto}
+@media print{body{background:#fff;color:#000}.header,.nav,.btn,.toast{display:none}.content{padding:0}.report-preview{border-radius:0}}
+</style>
+</head>
+<body>
+<div class="header"><h1>🏗️ CONSTRUCTION MANAGER</h1><div style="margin-top:5px"><input type="date" id="globalDatePicker" onchange="setGlobalDate(this.value)" style="width:auto;display:inline-block;font-size:12px;text-align:center;background:#333;color:#ff9f0a;border:1px solid #ff9f0a;border-radius:6px;padding:4px 8px"> <small style="color:#aaa" id="globalDateLabel"></small></div></div>
+<div class="nav" id="nav"></div>
+<div class="content" id="content"></div>
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal"><div class="modal-content" id="modalContent"></div></div>
+<script>
+// ============ DATA ============
+const K='cm_v2';
+let D=JSON.parse(localStorage.getItem(K))||getDefault();
+
+function getDefault(){
+return {
+reportNo:'',date:new Date().toISOString().split('T')[0],
+projectName:'',wpItemNo:'',contractNo:'',siteLocation:'',county:'',mainContractor:'',
+weatherMorning:'',weatherAfternoon:'',groundCondition:'',tempNotes:'',
+diaries:[],inspections:[],ncrs:[],instructions:[],delays:[],meetings:[],
+materials:[],materialLogs:[],labour:[],plant:[],visitors:[],rfis:[],
+cowName:'',cowDateTime:'',contractorRepName:'',contractorRepDateTime:'',
+timeLostHours:'',delayReason:'',safetyIssues:''
+};
+}
+
+function save(){localStorage.setItem(K,JSON.stringify(D));}
+
+// ============ CATALOGS (from Cowlog Pro) ============
+const WORK_ITEMS=[
+"Mobilization — Site Setup","Mobilization — Hoarding",
+"Setting Out — Control Points","Setting Out — Grid Lines","Setting Out — Building Corners",
+"Bulk Excavation","Trench Excavation — Foundations","Trench Excavation — Drainage",
+"Backfill & Compaction","Hardcore Filling","Murram Blinding",
+"Blinding — 50mm","DPM Installation","Foundation Reinforcement","Foundation Concreting",
+"Column Starter Bars","Ground Beam Formwork","Ground Beam Reinforcement","Ground Beam Concreting",
+"GFS — Hardcore","GFS — DPM","GFS — Blinding","GFS — BRC Placement","GFS — Formwork","GFS — Concreting",
+"Anti-Termite Treatment","Substructure Backfill",
+"Column Reinf — GF","Column Shutters — GF","Column Concreting — GF",
+"Column Reinf — 1F","Column Shutters — 1F","Column Concreting — 1F",
+"Beam Formwork — GF","Beam Reinf — GF","Beam Concreting — GF",
+"Slab Formwork — GF","Slab Reinf — GF","Slab Concreting — GF",
+"Slab Formwork — Roof","Slab Reinf — Roof","Slab Concreting — Roof",
+"Staircase — Formwork","Staircase — Reinf","Staircase — Concreting",
+"Blockwork — GF","Blockwork — 1F","Hoop Iron Installation","Wall Stiffeners",
+"Ring Beam Formwork","Ring Beam Concreting","Lintels — Precast","Movement Joints",
+"Steel Fabrication","Steel Erection","Steel Decking",
+"Roof Structure — Timber","Roof Underlay","Tile Roofing","Sheet Roofing",
+"Ridge Capping","Flashings","Gutters & Downpipes",
+"Waterproofing — Roof","Waterproofing — Wet Areas",
+"Below Ground Drainage","Manhole Construction","Supply Pipework",
+"Pressure Testing — Plumbing","Sanitary Ware Installation",
+"Electrical — Containment","Electrical — Cabling","Electrical — DB Installation",
+"Electrical — Lighting","Electrical — Power","Electrical — Earthing",
+"Internal Plastering","External Rendering","Floor Screeding",
+"Floor Tiling","Wall Tiling",
+"Painting — Internal Walls","Painting — Ceilings","Painting — External",
+"Door Frame Installation","Door Leaf Installation","Window Frame Installation",
+"Glazing","Ironmongery","Skirting & Architraves",
+"Suspended Ceiling — Grid","Ceiling Tiles",
+"Road — Sub-base","Road — Surfacing","Paving","Kerb & Channel",
+"Boundary Wall","Gate Installation","Landscaping",
+"Septic Tank","Underground Tank",
+"Water Supply Commissioning","Drainage Commissioning","Electrical Commissioning",
+"Snagging — Internal","Snagging — External","Cleaning","Handover"
+];
+
+const OBSERVATIONS=[
+"✅ Work progressing well, within programme",
+"✅ Good quality workmanship observed",
+"✅ Materials delivered as per specification",
+"⚠️ Work slightly behind schedule",
+"⚠️ Some quality issues noted — instructed contractor to rectify",
+"⚠️ Material shortage reported — delivery expected tomorrow",
+"⚠️ Equipment breakdown — repair underway",
+"🌧️ Work stopped due to heavy rain",
+"🌧️ Rain affected concreting — extra curing applied",
+"❌ Work stopped — safety concern identified",
+"❌ Defective work rejected — NCR raised",
+"❌ Materials rejected — not to specification",
+"📋 Inspection carried out — see inspection report",
+"📋 Site meeting held — see minutes",
+"🚚 Concrete delivery received",
+"🚚 Steel delivery received",
+"🔧 Formwork being erected",
+"🔧 Reinforcement being tied",
+"💧 Curing ongoing — surfaces kept moist",
+"🧹 Site cleaning in progress"
+];
+
+const NCR_CATEGORIES={
+"Excavation & Earthworks":["Excavation too deep/shallow","Wrong trench width","Unsafe batter/slope","Poor backfill compaction","Murram quality poor"],
+"Substructure":["Blinding too thin/uneven","DPM punctured/not lapped","Wrong rebar size/spacing","Insufficient cover","Honeycomb in foundation","Starter bars misplaced"],
+"Concrete Frame":["Honeycomb in column/beam/slab","Wrong concrete grade","Insufficient vibration","Formwork not plumb","Rebar spacing wrong","Cover insufficient","Cold joint formed"],
+"Blockwork & Masonry":["Wrong block type","Poor bonding/alignment","Mortar mix wrong","Hoop iron missing","Movement joints missing"],
+"Finishes":["Plaster cracking","Uneven rendering","Wrong paint shade","Tiles not level","Hollow tiles"],
+"Waterproofing":["Inadequate membrane","Poor lapping","Punctures in DPM","No fillet at corners"],
+"General":["Work not to drawing","Work not to specification","Unsafe working practice","Poor housekeeping","Unauthorized work"]
+};
+
+const DELAY_CATEGORIES={
+"Weather":["Heavy rain","Flooding","High winds","Extreme heat"],
+"Material Supply":["Late delivery of steel","Late delivery of cement","Late delivery of concrete","Material shortage"],
+"Labour":["Labour shortage","Labour strike","Key personnel absent","Subcontractor not mobilized"],
+"Equipment":["Crane breakdown","Concrete pump breakdown","Generator failure","Excavator breakdown"],
+"Design/Client":["Late design change","Delayed drawing approval","Client variation order","Late response to RFI"],
+"Contractual":["Delayed payment","Dispute over variation","Delay in site possession"],
+"Other":["Utility relocation","Community unrest","Force majeure"]
+};
+
+const MATERIAL_CATALOG={
+"Cement & Binders":["Cement - OPC 42.5N","Cement - PPC 32.5N","White Cement","Lime"],
+"Reinforcement Steel":["Y8 (8mm)","Y10 (10mm)","Y12 (12mm)","Y16 (16mm)","Y20 (20mm)","Y25 (25mm)","BRC A142","BRC A193","Binding Wire"],
+"Blocks":["Solid Block 4\"","Solid Block 6\"","Solid Block 8\"","Hollow Block 4\"","Hollow Block 6\"","Hollow Block 8\""],
+"Aggregates & Sand":["River Sand (Fine)","River Sand (Coarse)","Plaster Sand","Ballast 14mm","Ballast 20mm","Hardcore","Murram"],
+"Timber":["Softwood 4x2","Softwood 3x2","Plywood 18mm","Plywood 12mm","Formwork timber"],
+"Plumbing":["PVC Pipe 110mm","PVC Pipe 50mm","PEX Pipe 15mm","PEX Pipe 22mm","Sanitary Ware"],
+"Electrical":["2.5mm² Cable","4mm² Cable","10mm² Cable","DB Board","Sockets","Switches"],
+"Finishes":["Ceramic Tiles 40x40","Ceramic Tiles 30x60","Porcelain Tiles","Emulsion Paint","Gloss Paint","Plaster"]
+};
+
+const INSPECTION_CHECKLISTS={
+"Mobilization & Setup":{items:["Site handed over","Boundaries confirmed","Access roads OK","Water connected","Power connected","Security in place","First aid station","Site office complete"]},
+"Setting Out":{items:["Grid lines checked","Building corners set","Levels verified","Control points protected","Setback confirmed"]},
+"Excavation":{items:["Depth correct","Width correct","Bottom level","Loose material removed","Safety slope/batter","Ground water controlled"]},
+"Foundations":{items:["Blinding level","Blinding thickness","DPM installed","DPM lapped","Rebar size","Rebar spacing","Cover blocks placed","Formwork secure","Concrete grade","Compaction/vibration","Curing started"]},
+"Columns":{items:["Verticality/plumb","Rebar size & number","Stirrup spacing","Cover adequate","Formwork tight","Kicker cast","Starter bars correct","Concrete grade","Proper vibration"]},
+"Beams & Slabs":{items:["Formwork level","Props adequate","Rebar size & spacing","Cover blocks","BRC chaired","Services conduits in place","Concrete grade","Compaction","Screeding level","Curing"]},
+"Blockwork":{items:["Block type correct","Mortar mix ratio","Alignment/plumb","Bond pattern","Hoop iron at every 3 courses","Wall ties if cavity","Movement joints","Openings dimensions","Lintels installed"]},
+"Plastering":{items:["Surface prepared","Chicken mesh at joints","Screeds/guides placed","Mix ratio correct","Thickness correct","Curing done","No cracks/hollowness"]},
+"Roofing":{items:["Structure type confirmed","Timber treated","Underlay installed","Battens spacing","Tiles/sheets fixed","Ridge/hip secure","Flashings installed","Gutters & downpipes","Water test done"]},
+"Finishes":{items:["Tiling — level checked","Tiling — joints uniform","Painting — primer done","Painting — finish coat","Skirting installed","Ironmongery fitted","Glazing complete","Doors/windows operational"]}
+};
+
+const MEETING_AGENDA=[
+"Confirmation of Previous Minutes","Progress Review","Quality & Inspections",
+"Materials & Deliveries","Plant & Equipment","Health & Safety",
+"Variations & Claims","Programme & Delays","Commercial Matters","AOB"
+
+// ============ CONCRETE CUBES ============
+const CONCRETE_GRADES=["C15/20 — Blinding","C20/25 — Light duty","C25/30 — General RC (slabs, beams, columns)","C30/37 — Heavy duty / Water-retaining","C35/45 — Precast elements","C40/50 — High strength / Bridge works","C50/60 — Special structures"];
+const POUR_LOCATIONS=["Foundations — Pad Footing","Foundations — Strip Footing","Ground Floor Slab","Column — Ground Floor","Column — 1st Floor","Column — 2nd Floor","Beam — Ground Floor","Beam — 1st Floor","Suspended Slab — 1st Floor","Suspended Slab — Roof","Staircase","Retaining Wall","Lift Pit","Septic Tank","Underground Tank","Boundary Wall Foundation","Drainage Works","External Paving"];
+
+// ============ RFI CATEGORIES ============
+const RFI_CATEGORIES={
+"📐 STRUCTURAL":["Clarify reinforcement detail at column/beam junction","Confirm concrete grade","Clarify foundation depth","Confirm rebar size and spacing","Clarify construction joint locations","Request structural engineer's approval for rebar substitution","Confirm load-bearing capacity","Clarify camber requirements"],
+"🏗️ ARCHITECTURAL":["Clarify floor finish type","Confirm ceiling height","Clarify wall finish","Request door/window schedule","Clarify colour scheme","Confirm tile size and pattern","Clarify skirting detail","Request elevation detail"],
+"🚿 PLUMBING":["Clarify pipe sizing","Confirm drainage invert levels","Request plumbing schematic","Clarify water tank capacity","Confirm sanitary ware specification","Request grease trap detail","Clarify rainwater harvesting system","Confirm hot water system specification"],
+"⚡ ELECTRICAL":["Clarify cable sizing","Confirm distribution board location","Request lighting layout","Clarify emergency lighting requirements","Confirm socket outlet heights","Request earthing detail","Clarify solar PV system","Confirm fire alarm device locations"]
+};
+
+// ============ STOP WORK CATEGORIES ============
+const SWO_CATEGORIES={
+"🛑 SAFETY — Immediate Danger":["Unsafe scaffolding — missing guardrails","Excavation collapse risk — no shoring","Live electrical hazard — exposed wires","Working at height without fall protection","Unsafe crane/lifting operation","Confined space without permit"],
+"⚠️ QUALITY — Major Defect":["Structural failure risk — cracks observed","Wrong concrete grade used","Major honeycombing in structural element","Foundation bearing capacity inadequate","Reinforcement not as per design","Waterproofing failure — active leak"],
+"📋 NON-COMPLIANCE":["Working without approved drawings","Using unapproved materials","Deviation from approved method statement","Subcontractor not approved","Works outside approved scope"],
+"🚧 ENVIRONMENTAL":["Pollution incident — spillage/discharge","Dust/noise beyond permitted levels","Damage to protected trees/vegetation","Unauthorized waste disposal"]
+};
+
+// ============ MRN CATEGORIES (Material Rejection) ============
+const MRN_CATEGORIES={
+"🧱 Cement & Binders":["Expired/old stock cement","Lumpy/hardened cement","Wrong type delivered (OPC vs PPC)","Damaged bags — water ingress"],
+"🔩 Reinforcement Steel":["Wrong diameter/grade","Excessive rust/corrosion","Bent/buckled bars","Wrong length delivered","No mill certificate"],
+"🧱 Blocks & Bricks":["Cracked/broken blocks","Wrong size/type","Under-strength (fails test)","Uneven edges/poor finish","Wrong colour batch"],
+"🪨 Aggregates":["Wrong size/grading","Contaminated with silt/clay","Contains organic matter","Wrong source (not approved)","Reactive aggregates (ASR risk)"],
+"🪵 Timber":["Not treated as specified","Wrong species/grade","Excessive knots/warping","Moisture content too high","Insect/fungal attack"],
+"💧 Plumbing Materials":["Wrong pipe material/size","Fittings not matching pipes","Damaged/cracked pipes","No test certificates","Counterfeit branded items"],
+"⚡ Electrical":["Wrong cable size","Not to KEBS standard","Damaged insulation","No test certificate","Wrong voltage rating"],
+"🎨 Finishes":["Wrong colour/shade","Damaged/opened tins","Expired paint","Wrong tile batch/shade","Chipped/broken tiles"],
+"🏠 Roofing":["Wrong gauge/thickness","Pre-rusted sheets","Wrong profile/colour","Damaged during transport","Missing accessories"],
+"📦 General":["Not to approved sample","No delivery note","No test certificate","Quantity short delivered","Damaged during offloading"]
+};
+
+// ============ NAVIGATION ============
+const NAV=[
+{id:"dashboard",label:"🏠 Home"},
+{id:'diary',label:'📔 Diary'},
+{id:'inspections',label:'✅ Inspections'},
+{id:'ncr',label:'🚨 NCRs'},
+{id:'instructions',label:'📋 S.I.'},
+{id:'rfi',label:'📤 RFI'},
+{id:'materials',label:'🧱 Materials'},
+{id:'rejections',label:'📦 Rejections'},
+{id:'concrete',label:'🧪 Cubes'},
+{id:'labour',label:'👷 Labour'},
+{id:'plant',label:'🚜 Plant'},
+{id:'drawings',label:'📐 Drawings'},
+{id:'meetings',label:'📝 Meetings'},
+{id:'delays',label:'⏰ Delays'},
+{id:'stopwork',label:'🛑 Stop Work'},
+{id:'report',label:'📄 REPORT'},
+{id:'project',label:'⚙️ Settings'}
+];
+let current='dashboard';
+];
+// ============ NAVIGATION ============
+const NAV=[
+{id:"dashboard",label:"🏠 Home"},
+{id:'diary',label:'📔 Diary'},
+{id:'inspections',label:'✅ Inspections'},
+{id:'ncr',label:'🚨 NCRs'},
+{id:'instructions',label:'📋 S.I.'},
+{id:'materials',label:'🧱 Materials'},
+{id:'labour',label:'👷 Labour'},
+{id:'plant',label:'🚜 Plant'},
+{id:'meetings',label:'📝 Meetings'},
+{id:'delays',label:'⏰ Delays'},
+{id:'report',label:'📄 REPORT'}
+];
+let current='dashboard';
+
+function nav(){
+let h='';
+for(let i=0;i<NAV.length;i++){
+h+='<button class="'+(NAV[i].id===current?'active':'')+'" onclick="go(\''+NAV[i].id+'\')">'+NAV[i].label+'</button>';
+}
+document.getElementById('nav').innerHTML=h;
+var gdp=document.getElementById('globalDatePicker');if(gdp){gdp.value=globalDate;gdp.max=today();}
+var gdl=document.getElementById('globalDateLabel');if(gdl)gdl.textContent=fmtGlobalDate();
+}
+function go(id){
+current=id;nav();
+document.getElementById('content').innerHTML=RENDER[id]?RENDER[id]():'';
+if(id!=='report')bindInputs();
+window.scrollTo(0,0);
+}
+function toast(m){
+let t=document.getElementById('toast');
+t.textContent=m;t.style.display='block';
+setTimeout(function(){t.style.display='none';},2000);
+}
+function bindInputs(){
+document.querySelectorAll('input,select,textarea').forEach(function(el){
+el.addEventListener('input',function(){
+if(this.id && this.id.startsWith('_'))return;
+if(this.id)D[this.id]=this.value;
+save();
+});
+if(D[el.id]!==undefined && el.type!=='file')el.value=D[el.id];
+});
+}
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5);}
+function fmtDate(ts){return new Date(ts).toISOString().split('T')[0];}
+function today(){return new Date().toISOString().split('T')[0];}
+function setGlobalDate(d){globalDate=d;go(current);}
+function fmtGlobalDate(){return new Date(globalDate).toLocaleDateString('en-KE',{weekday:'short',day:'numeric',month:'short',year:'numeric'});}
+
+function addItem(arr,item){
+if(!D[arr])D[arr]=[];
+D[arr].push(item);save();
+}
+function delItem(arr,id){
+D[arr]=D[arr].filter(function(i){return i.id!==id;});
+save();
+}
+// ============ RENDERERS ============
+const RENDER={};
+
+// ============ DASHBOARD ============
+RENDER["dashboard"]=function(){
+var todayStr=globalDate;
+var diaries=(D.diaries||[]).filter(function(e){return e.date===globalDate;});
+var insp=(D.inspections||[]).filter(function(e){return e.date===globalDate;});
+var ncrsOpen=(D.ncrs||[]).filter(function(e){return e.status==="open";});
+var lab=(D.labour||[]).filter(function(e){return e.date===globalDate;});
+var plantActive=(D.plant||[]).filter(function(e){return e.status==="Active";});
+var delays=(D.delays||[]).filter(function(e){return e.date===globalDate;});
+var mats=(D.materials||[]).filter(function(e){return e.date===globalDate;});
+var meets=(D.meetings||[]).filter(function(e){return e.date===globalDate;});
+var totalLabour=0;
+for(var i=0;i<lab.length;i++){totalLabour+=parseInt(lab[i].mainCount||0)+parseInt(lab[i].subCount||0);}
+var inspPassed=0,inspTotal=0;
+for(var i=0;i<insp.length;i++){for(var j=0;j<insp[i].items.length;j++){inspTotal++;if(insp[i].items[j].pass)inspPassed++;}}
+var weatherIcon="⛅";
+if(D.weatherMorning==="Sunny")weatherIcon="☀️";
+else if(D.weatherMorning==="Rainy")weatherIcon="🌧️";
+else if(D.weatherMorning==="Cloudy")weatherIcon="☁️";
+var dateStr=new Date().toLocaleDateString("en-KE",{weekday:"long",day:"numeric",month:"long",year:"numeric"});
+
+var recentActivity="";
+var allToday=[].concat(
+diaries.map(function(e){return{type:"diary",time:new Date(e.timestamp).toLocaleTimeString(),text:e.activity+" — "+e.location};}),
+insp.map(function(e){return{type:"inspection",time:"Today",text:e.phase+" at "+e.location};}),
+mats.map(function(e){return{type:"material",time:"Today",text:e.name+" — "+e.qty+" "+e.unit};})
+);
+allToday.sort(function(a,b){return a.time<b.time?1:-1;});
+for(var i=0;i<Math.min(allToday.length,5);i++){
+var icon=allToday[i].type==="diary"?"📔":allToday[i].type==="inspection"?"✅":"🧱";
+recentActivity+='<div style="padding:8px;border-bottom:1px solid #222;display:flex;gap:8px;align-items:center"><span style="font-size:16px">'+icon+'</span><div><small style="color:#888">'+allToday[i].time+'</small><br>'+allToday[i].text+'</div></div>';
+}
+if(!recentActivity)recentActivity='<p style="color:#666;padding:12px;text-align:center">No activity for this date. Select a date or tap quick buttons to add entries.</p>';
+
+return '<div style="text-align:center;padding:10px 0">'+
+'<h2 style="color:#ff9f0a;font-size:22px;margin:0">🏗️ CONSTRUCTION MANAGER</h2>'+
+'<p style="color:#aaa;font-size:13px;margin:4px 0">'+dateStr+'</p>'+
+'<p style="font-size:28px;margin:5px 0">'+weatherIcon+' <span style="font-size:13px;color:#aaa">'+(D.tempNotes||D.weatherMorning||"Tap ⚙️ Settings for weather")+'</span></p>'+
+'</div>'+
+
+'<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0">'+
+'<div class="card" style="text-align:center;cursor:pointer" onclick="go(\'diary\')"><div style="font-size:28px">📔</div><div style="font-size:22px;font-weight:bold;color:#ff9f0a">'+diaries.length+'</div><small style="color:#aaa">Diary</small></div>'+
+'<div class="card" style="text-align:center;cursor:pointer" onclick="go(\'inspections\')"><div style="font-size:28px">✅</div><div style="font-size:22px;font-weight:bold;color:'+(inspTotal>0&&inspPassed===inspTotal?'#30d158':'#ff9f0a')+'">'+(inspTotal>0?inspPassed+'/'+inspTotal:'0')+'</div><small style="color:#aaa">Inspections</small></div>'+
+'<div class="card" style="text-align:center;cursor:pointer" onclick="go(\'labour\')"><div style="font-size:28px">👷</div><div style="font-size:22px;font-weight:bold;color:#0a84ff">'+totalLabour+'</div><small style="color:#aaa">Labour</small></div>'+
+'<div class="card" style="text-align:center;cursor:pointer" onclick="go(\'ncr\')"><div style="font-size:28px">🚨</div><div style="font-size:22px;font-weight:bold;color:'+(ncrsOpen.length>0?'#ff3b30':'#30d158')+'">'+ncrsOpen.length+'</div><small style="color:#aaa">Open NCRs</small></div>'+
+'<div class="card" style="text-align:center;cursor:pointer" onclick="go(\'delays\')"><div style="font-size:28px">⏰</div><div style="font-size:22px;font-weight:bold;color:'+(delays.length>0?'#ff9f0a':'#30d158')+'">'+delays.length+'</div><small style="color:#aaa">Delays</small></div>'+
+'<div class="card" style="text-align:center;cursor:pointer" onclick="go(\'plant\')"><div style="font-size:28px">🚜</div><div style="font-size:22px;font-weight:bold;color:#0a84ff">'+plantActive.length+'</div><small style="color:#aaa">Plant</small></div>'+
+'</div>'+
+
+'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0">'+
+'<button class="btn btn-blue" onclick="go(\'diary\');setTimeout(function(){showDiaryForm();},100)">✍️ Quick Diary</button>'+
+'<button class="btn btn-green" onclick="go(\'inspections\');setTimeout(function(){showInspectionForm();},100)">🔍 Inspect</button>'+
+'<button class="btn" style="background:#ff3b30;color:#fff" onclick="go(\'ncr\');setTimeout(function(){showNCRForm();},100)">🚨 Raise NCR</button>'+
+'<button class="btn" style="background:#0a84ff;color:#fff" onclick="go(\'labour\');setTimeout(function(){showLabourForm();},100)">👷 Log Labour</button>'+
+'</div>'+
+
+'<div class="card"><h4 style="color:#ff9f0a;margin-bottom:8px">📋 Today\'s Activity</h4>'+recentActivity+'</div>'+
+'<br><button class="btn" style="width:100%;background:#ff9f0a;color:#000;font-size:16px;padding:14px" onclick="go(\'report\')">📄 VIEW TODAY\'S REPORT</button>'+
+'<br><br>';
+};
+
+RENDER['diary']=function(){
+var list='';
+var entries=(D.diaries||[]).filter(function(e){return e.date===today();});
+if(entries.length===0){
+list='<p style="color:#666">No diary entries for today. Add one below.</p>';
+}else{
+for(var i=0;i<entries.length;i++){
+var e=entries[i];
+list+='<div class="card"><div style="display:flex;justify-content:space-between"><h4>'+e.activity+'</h4><button class="btn btn-red btn-sm" onclick="delItem(\'diaries\',\''+e.id+'\');go(\'diary\')">✕</button></div><p style="font-size:12px;color:#aaa">📍 '+e.location+' | 👷 '+e.labour+' labour | '+e.time+'</p><p style="font-size:13px">'+e.obs+'</p></div>';
+}
+}
+return '<h2>📔 Site Diary</h2><p style="color:#aaa;font-size:12px">Date: '+today()+'</p>'+list+
+'<button class="btn btn-blue" onclick="showDiaryForm()">+ New Diary Entry</button>';
+};
+
+function showDiaryForm(){
+var workOpts='';
+for(var i=0;i<WORK_ITEMS.length;i++){
+workOpts+='<option>'+WORK_ITEMS[i]+'</option>';
+}
+var locOpts='<option>Site Wide</option><option>Block A - GF</option><option>Block A - 1F</option><option>Block B - GF</option><option>Block B - 1F</option><option>Foundations</option><option>External Works</option>';
+var obsOpts='';
+for(var i=0;i<OBSERVATIONS.length;i++){
+obsOpts+='<option>'+OBSERVATIONS[i]+'</option>';
+}
+var h='<h3>New Diary Entry</h3>'+
+'<label>Activity:</label><select id="_diaryActivity">'+workOpts+'</select>'+
+'<label>Location:</label><select id="_diaryLoc">'+locOpts+'</select>'+
+'<div class="row"><div><label>Labour Count:</label><input id="_diaryLabour" type="number" value="0"></div><div><label>Equipment:</label><input id="_diaryEquip" placeholder="e.g. Mixer, Poker"></div></div>'+
+'<label>Observation:</label><select id="_diaryObs">'+obsOpts+'</select>'+
+'<label>Remarks:</label><textarea id="_diaryRemarks"></textarea>'+
+'<button class="btn" onclick="saveDiary()">💾 Save Entry</button>'+
+'<button class="btn btn-secondary" onclick="go(\'diary\')">Cancel</button>';
+document.getElementById('content').innerHTML=h;
+}
+
+function saveDiary(){
+var act=document.getElementById('_diaryActivity').value;
+var loc=document.getElementById('_diaryLoc').value;
+var labour=document.getElementById('_diaryLabour').value;
+var equip=document.getElementById('_diaryEquip').value;
+var obs=document.getElementById('_diaryObs').value;
+var rem=document.getElementById('_diaryRemarks').value;
+if(!act){toast('Please select an activity');return;}
+addItem('diaries',{
+id:uid(),date:today(),time:new Date().toLocaleTimeString(),
+activity:act,location:loc,labour:labour,equipment:equip,obs:obs,remarks:rem
+});
+toast('Diary entry saved!');
+go('diary');
+}
+
+RENDER['inspections']=function(){
+var list='';
+var insp=(D.inspections||[]).filter(function(e){return e.date===today();});
+if(insp.length===0){
+list='<p style="color:#666">No inspections today.</p>';
+}else{
+for(var i=0;i<insp.length;i++){
+var e=insp[i];
+var passed=e.items.filter(function(x){return x.pass;}).length;
+var total=e.items.length;
+list+='<div class="card"><div style="display:flex;justify-content:space-between"><h4>'+e.phase+'</h4><button class="btn btn-red btn-sm" onclick="delItem(\'inspections\',\''+e.id+'\');go(\'inspections\')">✕</button></div><p><span class="tag '+(passed===total?'tag-pass':'tag-fail')+'">'+passed+'/'+total+' Passed</span> <span style="font-size:11px;color:#aaa">📍 '+e.location+'</span></p></div>';
+}
+}
+return '<h2>✅ Inspections</h2><p style="color:#aaa;font-size:12px">Date: '+today()+'</p>'+list+
+'<button class="btn btn-blue" onclick="showInspectionForm()">+ New Inspection</button>';
+};
+
+function showInspectionForm(){
+var phases='';
+var keys=Object.keys(INSPECTION_CHECKLISTS);
+for(var i=0;i<keys.length;i++){
+phases+='<option value="'+keys[i]+'">'+keys[i]+'</option>';
+}
+var h='<h3>New Inspection</h3>'+
+'<label>Phase:</label><select id="_inspPhase" onchange="loadChecklist()">'+phases+'</select>'+
+'<label>Location:</label><input id="_inspLoc" placeholder="e.g. Block A - Ground Floor">'+
+'<div id="_checklist"></div>'+
+'<label>Notes:</label><textarea id="_inspNotes"></textarea>'+
+'<button class="btn" onclick="saveInspection()">💾 Save Inspection</button>'+
+'<button class="btn btn-secondary" onclick="go(\'inspections\')">Cancel</button>';
+document.getElementById('content').innerHTML=h;
+loadChecklist();
+}
+
+function loadChecklist(){
+var phase=document.getElementById('_inspPhase').value;
+var items=INSPECTION_CHECKLISTS[phase]?INSPECTION_CHECKLISTS[phase].items:[];
+var h='';
+for(var i=0;i<items.length;i++){
+h+='<div style="display:flex;align-items:center;gap:8px;margin:5px 0"><input type="checkbox" id="_check_'+i+'" checked style="width:auto"><label style="margin:0">'+items[i]+'</label></div>';
+}
+document.getElementById('_checklist').innerHTML=h;
+}
+
+function saveInspection(){
+var phase=document.getElementById('_inspPhase').value;
+var loc=document.getElementById('_inspLoc').value;
+var notes=document.getElementById('_inspNotes').value;
+var items=INSPECTION_CHECKLISTS[phase]?INSPECTION_CHECKLISTS[phase].items:[];
+var checklist=[];
+for(var i=0;i<items.length;i++){
+var el=document.getElementById('_check_'+i);
+checklist.push({label:items[i],pass:el?el.checked:true});
+}
+addItem('inspections',{
+id:uid(),date:today(),phase:phase,location:loc,items:checklist,notes:notes
+});
+toast('Inspection saved!');
+go('inspections');
+}
+RENDER['ncr']=function(){
+var list='';
+var ncrs=D.ncrs||[];
+if(ncrs.length===0){
+list='<p style="color:#666">No NCRs recorded.</p>';
+}else{
+for(var i=0;i<ncrs.length;i++){
+var e=ncrs[i];
+list+='<div class="card"><div style="display:flex;justify-content:space-between"><h4>🚨 '+e.title+'</h4><button class="btn btn-red btn-sm" onclick="delItem(\'ncrs\',\''+e.id+'\');go(\'ncr\')">✕</button></div><p><span class="tag tag-'+(e.status==='open'?'open':'closed')+'">'+e.status.toUpperCase()+'</span> | '+e.severity+' | 📍 '+e.location+'</p><p style="font-size:12px">'+e.desc+'</p></div>';
+}
+}
+return '<h2>🚨 Non-Conformance Reports</h2>'+list+
+'<button class="btn btn-blue" onclick="showNCRForm()">+ New NCR</button>';
+};
+
+function showNCRForm(){
+var cats='';
+var ckeys=Object.keys(NCR_CATEGORIES);
+for(var i=0;i<ckeys.length;i++){cats+='<option>'+ckeys[i]+'</option>';}
+var h='<h3>New NCR</h3>'+
+'<label>Category:</label><select id="_ncrCat" onchange="loadNCRItems()">'+cats+'</select>'+
+'<label>Specific Issue:</label><select id="_ncrItem"></select>'+
+'<label>Title:</label><input id="_ncrTitle" placeholder="Brief title">'+
+'<label>Severity:</label><select id="_ncrSev"><option>Major</option><option>Minor</option><option>Critical</option></select>'+
+'<label>Location:</label><input id="_ncrLoc" placeholder="Location">'+
+'<label>Description:</label><textarea id="_ncrDesc" placeholder="Detailed description of non-conformance"></textarea>'+
+'<label>Action Required:</label><textarea id="_ncrAction" placeholder="Required corrective action"></textarea>'+
+'<button class="btn" onclick="saveNCR()">💾 Save NCR</button>'+
+'<button class="btn btn-secondary" onclick="go(\'ncr\')">Cancel</button>';
+document.getElementById('content').innerHTML=h;
+loadNCRItems();
+}
+
+function loadNCRItems(){
+var cat=document.getElementById('_ncrCat').value;
+var items=NCR_CATEGORIES[cat]||[];
+var h='';
+for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}
+document.getElementById('_ncrItem').innerHTML=h;
+}
+
+function saveNCR(){
+addItem('ncrs',{
+id:uid(),title:document.getElementById('_ncrTitle').value,
+category:document.getElementById('_ncrCat').value,
+specificIssue:document.getElementById('_ncrItem').value,
+severity:document.getElementById('_ncrSev').value,
+location:document.getElementById('_ncrLoc').value,
+desc:document.getElementById('_ncrDesc').value,
+action:document.getElementById('_ncrAction').value,
+status:'open',date:today(),timestamp:Date.now()
+});
+toast('NCR saved!');go('ncr');
+}
+
+RENDER['instructions']=function(){
+var list='';
+var sis=D.instructions||[];
+if(sis.length===0){
+list='<p style="color:#666">No site instructions issued.</p>';
+}else{
+for(var i=0;i<sis.length;i++){
+var e=sis[i];
+list+='<div class="card"><div style="display:flex;justify-content:space-between"><h4>📋 SI to: '+e.issuedTo+'</h4><button class="btn btn-red btn-sm" onclick="delItem(\'instructions\',\''+e.id+'\');go(\'instructions\')">✕</button></div><p style="font-size:12px">📍 '+e.location+' | Deadline: '+e.deadline+' | <span class="tag tag-'+(e.status==='issued'?'open':'closed')+'">'+e.status+'</span></p><p style="font-size:12px">'+e.desc+'</p></div>';
+}
+}
+return '<h2>📋 Site Instructions</h2>'+list+
+'<button class="btn btn-blue" onclick="showSIForm()">+ New S.I.</button>';
+};
+
+function showSIForm(){
+var h='<h3>New Site Instruction</h3>'+
+'<label>Issued To:</label><input id="_siTo" placeholder="Contractor / Subcontractor">'+
+'<label>Location:</label><input id="_siLoc" placeholder="Location">'+
+'<label>Description:</label><textarea id="_siDesc" placeholder="Instruction details"></textarea>'+
+'<label>Reference:</label><input id="_siRef" placeholder="Drawing / Spec reference">'+
+'<label>Deadline:</label><input id="_siDeadline" type="date">'+
+'<button class="btn" onclick="saveSI()">💾 Save S.I.</button>'+
+'<button class="btn btn-secondary" onclick="go(\'instructions\')">Cancel</button>';
+document.getElementById('content').innerHTML=h;
+}
+
+function saveSI(){
+addItem('instructions',{
+id:uid(),issuedTo:document.getElementById('_siTo').value,
+location:document.getElementById('_siLoc').value,
+desc:document.getElementById('_siDesc').value,
+ref:document.getElementById('_siRef').value,
+deadline:document.getElementById('_siDeadline').value,
+status:'issued',date:today(),timestamp:Date.now()
+});
+toast('Site Instruction saved!');go('instructions');
+}
+
+RENDER['materials']=function(){
+var list='';
+var mats=D.materials||[];
+if(mats.length===0){
+list='<p style="color:#666">No materials logged.</p>';
+}else{
+for(var i=0;i<mats.length;i++){
+var e=mats[i];
+list+='<div class="card"><div style="display:flex;justify-content:space-between"><h4>🧱 '+e.name+'</h4><button class="btn btn-red btn-sm" onclick="delItem(\'materials\',\''+e.id+'\');go(\'materials\')">✕</button></div><p>Qty: '+e.qty+' '+e.unit+' | Source: '+e.source+' | '+e.date+'</p></div>';
+}
+}
+return '<h2>🧱 Material Deliveries</h2>'+list+
+'<button class="btn btn-blue" onclick="showMaterialForm()">+ Log Material</button>';
+};
+
+function showMaterialForm(){
+var cats='';
+var ckeys=Object.keys(MATERIAL_CATALOG);
+for(var i=0;i<ckeys.length;i++){cats+='<option>'+ckeys[i]+'</option>';}
+var h='<h3>Log Material Delivery</h3>'+
+'<label>Category:</label><select id="_matCat" onchange="loadMatItems()">'+cats+'</select>'+
+'<label>Material:</label><select id="_matItem"></select>'+
+'<div class="row"><div><label>Quantity:</label><input id="_matQty" type="number"></div><div><label>Unit:</label><select id="_matUnit"><option>Bags</option><option>Tonnes</option><option>m³</option><option>Pieces</option><option>Bundles</option><option>Liters</option><option>Rolls</option></select></div></div>'+
+'<label>Source / Supplier:</label><input id="_matSource" placeholder="Supplier name">'+
+'<button class="btn" onclick="saveMaterial()">💾 Save Material</button>'+
+'<button class="btn btn-secondary" onclick="go(\'materials\')">Cancel</button>';
+document.getElementById('content').innerHTML=h;
+loadMatItems();
+}
+
+function loadMatItems(){
+var cat=document.getElementById('_matCat').value;
+var items=MATERIAL_CATALOG[cat]||[];
+var h='';
+for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}
+document.getElementById('_matItem').innerHTML=h;
+}
+
+function saveMaterial(){
+addItem('materials',{
+id:uid(),category:document.getElementById('_matCat').value,
+name:document.getElementById('_matItem').value,
+qty:document.getElementById('_matQty').value,
+unit:document.getElementById('_matUnit').value,
+source:document.getElementById('_matSource').value,
+date:today(),timestamp:Date.now()
+});
+toast('Material logged!');go('materials');
+}
+RENDER['labour']=function(){
+var list='';
+var lab=D.labour||[];
+var todayLab=lab.filter(function(e){return e.date===today();});
+if(todayLab.length===0){
+list='<p style="color:#666">No labour logged for today.</p>';
+}else{
+var trades=['Site Agent','Masons','Carpenters','Steel Fixers','Plumbers','Painters','General','Other'];
+for(var t=0;t<trades.length;t++){
+var main=0,sub=0;
+for(var l=0;l<todayLab.length;l++){
+if(todayLab[l].trade===trades[t]){
+main+=parseInt(todayLab[l].mainCount)||0;
+sub+=parseInt(todayLab[l].subCount)||0;
+}
+}
+if(main>0||sub>0){
+list+='<tr><td>'+trades[t]+'</td><td>'+main+'</td><td>'+sub+'</td></tr>';
+}
+}
+if(list.indexOf('<tr>')===-1)list='<p style="color:#666">No labour logged for today.</p>';
+else list='<table><tr><th>Trade</th><th>Main Contractor</th><th>Sub-Contractor</th></tr>'+list+'</table>';
+}
+return '<h2>👷 Labour & Attendance</h2><p style="color:#aaa;font-size:12px">Date: '+today()+'</p>'+list+
+'<button class="btn btn-blue" onclick="showLabourForm()">+ Add Labour</button>';
+};
+
+function showLabourForm(){
+var h='<h3>Add Labour</h3>'+
+'<label>Trade:</label><select id="_labTrade"><option>Site Agent</option><option>Masons</option><option>Carpenters</option><option>Steel Fixers</option><option>Plumbers</option><option>Painters</option><option>General</option><option>Other</option></select>'+
+'<div class="row"><div><label>Main Contractor:</label><input id="_labMain" type="number" value="0"></div><div><label>Sub-Contractor:</label><input id="_labSub" type="number" value="0"></div></div>'+
+'<label>Company (if Sub):</label><input id="_labCompany" placeholder="Sub-contractor name">'+
+'<button class="btn" onclick="saveLabour()">💾 Add</button>'+
+'<button class="btn btn-secondary" onclick="go(\'labour\')">Cancel</button>';
+document.getElementById('content').innerHTML=h;
+}
+
+function saveLabour(){
+addItem('labour',{
+id:uid(),date:today(),
+trade:document.getElementById('_labTrade').value,
+mainCount:document.getElementById('_labMain').value,
+subCount:document.getElementById('_labSub').value,
+company:document.getElementById('_labCompany').value,
+timestamp:Date.now()
+});
+toast('Labour added!');go('labour');
+}
+
+RENDER['plant']=function(){
+var list='';
+var plant=D.plant||[];
+if(plant.length===0){
+list='<p style="color:#666">No plant/equipment logged.</p>';
+}else{
+for(var i=0;i<plant.length;i++){
+var e=plant[i];
+list+='<div class="card"><div style="display:flex;justify-content:space-between"><h4>🚜 '+e.name+'</h4><button class="btn btn-red btn-sm" onclick="delItem(\'plant\',\''+e.id+'\');go(\'plant\')">✕</button></div><p>Qty: '+e.qty+' | Status: <span class="tag '+(e.status==='Active'?'tag-pass':e.status==='Breakdown'?'tag-fail':'tag-open')+'">'+e.status+'</span></p></div>';
+}
+}
+return '<h2>🚜 Plant & Equipment</h2>'+list+
+'<button class="btn btn-blue" onclick="showPlantForm()">+ Add Equipment</button>';
+};
+
+function showPlantForm(){
+var h='<h3>Add Plant/Equipment</h3>'+
+'<label>Equipment:</label><select id="_plantName"><option>Concrete Mixer</option><option>Poker Vibrator</option><option>Excavator</option><option>Backhoe</option><option>Hoist/Crane</option><option>Water Pump</option><option>Generator</option><option>Dumper</option><option>Compactor</option><option>Tower Crane</option><option>Concrete Pump</option><option>Other</option></select>'+
+'<div class="row"><div><label>Quantity:</label><input id="_plantQty" type="number" value="1"></div><div><label>Status:</label><select id="_plantStatus"><option>Active</option><option>Idle</option><option>Breakdown</option></select></div></div>'+
+'<label>Remarks:</label><input id="_plantRemarks" placeholder="e.g. Reason if idle">'+
+'<button class="btn" onclick="savePlant()">💾 Add</button>'+
+'<button class="btn btn-secondary" onclick="go(\'plant\')">Cancel</button>';
+document.getElementById('content').innerHTML=h;
+}
+
+function savePlant(){
+addItem('plant',{
+id:uid(),name:document.getElementById('_plantName').value,
+qty:document.getElementById('_plantQty').value,
+status:document.getElementById('_plantStatus').value,
+remarks:document.getElementById('_plantRemarks').value,
+date:today(),timestamp:Date.now()
+});
+toast('Equipment added!');go('plant');
+}
+
+RENDER['meetings']=function(){
+var list='';
+var meets=D.meetings||[];
+if(meets.length===0){
+list='<p style="color:#666">No meetings recorded.</p>';
+}else{
+for(var i=0;i<meets.length;i++){
+var e=meets[i];
+list+='<div class="card"><div style="display:flex;justify-content:space-between"><h4>📝 Meeting '+e.meetingNo+'</h4><button class="btn btn-red btn-sm" onclick="delItem(\'meetings\',\''+e.id+'\');go(\'meetings\')">✕</button></div><p>'+e.date+' | '+e.venue+' | Attendees: '+e.attendees+'</p></div>';
+}
+}
+return '<h2>📝 Meeting Minutes</h2>'+list+
+'<button class="btn btn-blue" onclick="showMeetingForm()">+ New Meeting</button>';
+};
+
+function showMeetingForm(){
+var agenda='';
+for(var i=0;i<MEETING_AGENDA.length;i++){
+agenda+='<option>'+MEETING_AGENDA[i]+'</option>';
+}
+var h='<h3>New Meeting Minutes</h3>'+
+'<label>Meeting No:</label><input id="_meetNo" placeholder="e.g. MOM-001">'+
+'<div class="row"><div><label>Date:</label><input id="_meetDate" type="date" value="'+today()+'"></div><div><label>Time:</label><input id="_meetTime" placeholder="10:00 AM"></div></div>'+
+'<label>Venue:</label><input id="_meetVenue" placeholder="Site office">'+
+'<label>Attendees:</label><textarea id="_meetAttendees" placeholder="List of attendees"></textarea>'+
+'<label>Key Agenda Items Discussed:</label><textarea id="_meetAgenda" placeholder="Summary of discussions"></textarea>'+
+'<label>Action Items:</label><textarea id="_meetActions" placeholder="Action items agreed"></textarea>'+
+'<button class="btn" onclick="saveMeeting()">💾 Save Minutes</button>'+
+'<button class="btn btn-secondary" onclick="go(\'meetings\')">Cancel</button>';
+document.getElementById('content').innerHTML=h;
+}
+
+function saveMeeting(){
+addItem('meetings',{
+id:uid(),meetingNo:document.getElementById('_meetNo').value,
+date:document.getElementById('_meetDate').value,
+time:document.getElementById('_meetTime').value,
+venue:document.getElementById('_meetVenue').value,
+attendees:document.getElementById('_meetAttendees').value,
+agenda:document.getElementById('_meetAgenda').value,
+actions:document.getElementById('_meetActions').value,
+timestamp:Date.now()
+});
+toast('Meeting saved!');go('meetings');
+}
+
+RENDER['delays']=function(){
+var list='';
+var delays=D.delays||[];
+if(delays.length===0){
+list='<p style="color:#666">No delays recorded.</p>';
+}else{
+for(var i=0;i<delays.length;i++){
+var e=delays[i];
+list+='<div class="card"><div style="display:flex;justify-content:space-between"><h4>⏰ '+e.cause+'</h4><button class="btn btn-red btn-sm" onclick="delItem(\'delays\',\''+e.id+'\');go(\'delays\')">✕</button></div><p>Duration: '+e.duration+' hrs | '+e.date+' | Impact: '+e.impact+'</p></div>';
+}
+}
+return '<h2>⏰ Delays & Disruptions</h2>'+list+
+'<button class="btn btn-blue" onclick="showDelayForm()">+ Log Delay</button>';
+};
+
+function showDelayForm(){
+var cats='';
+var ckeys=Object.keys(DELAY_CATEGORIES);
+for(var i=0;i<ckeys.length;i++){cats+='<option>'+ckeys[i]+'</option>';}
+var h='<h3>Log Delay</h3>'+
+'<label>Category:</label><select id="_delayCat" onchange="loadDelayItems()">'+cats+'</select>'+
+'<label>Specific Cause:</label><select id="_delayItem"></select>'+
+'<div class="row"><div><label>Duration (Hours):</label><input id="_delayDur" type="number" value="1"></div><div><label>Impact:</label><select id="_delayImpact"><option>Major</option><option>Minor</option><option>Critical</option></select></div></div>'+
+'<label>Location:</label><input id="_delayLoc" placeholder="Affected area">'+
+'<button class="btn" onclick="saveDelay()">💾 Log Delay</button>'+
+'<button class="btn btn-secondary" onclick="go(\'delays\')">Cancel</button>';
+document.getElementById('content').innerHTML=h;
+loadDelayItems();
+}
+
+function loadDelayItems(){
+var cat=document.getElementById('_delayCat').value;
+var items=DELAY_CATEGORIES[cat]||[];
+var h='';
+for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}
+document.getElementById('_delayItem').innerHTML=h;
+}
+
+function saveDelay(){
+addItem('delays',{
+id:uid(),category:document.getElementById('_delayCat').value,
+cause:document.getElementById('_delayItem').value,
+duration:document.getElementById('_delayDur').value,
+impact:document.getElementById('_delayImpact').value,
+location:document.getElementById('_delayLoc').value,
+date:today(),timestamp:Date.now()
+});
+toast('Delay logged!');go('delays');
+}
+// ============ REPORT (Cowlog Pro Format) ============
+var globalDate=today();
+var reportDate=globalDate;
+function changeDate(days){
+var d=new Date(reportDate);
+d.setDate(d.getDate()+days);
+var nd=d.toISOString().split('T')[0];
+if(nd<=today())reportDate=nd;
+go('report');
+}
+function rdate(){return new Date(reportDate).toLocaleDateString('en-KE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});}
+
+RENDER['report']=function(){
+reportDate=globalDate;
+var dt=(D.diaries||[]).filter(function(e){return e.date===reportDate;});
+var insp=(D.inspections||[]).filter(function(e){return e.date===reportDate;});
+var ncrs=(D.ncrs||[]).filter(function(e){return e.date===reportDate;});
+var sis=(D.instructions||[]).filter(function(e){return e.date===reportDate;});
+var delays=(D.delays||[]).filter(function(e){return e.date===reportDate;});
+var mats=(D.materials||[]).filter(function(e){return e.date===reportDate;});
+var lab=(D.labour||[]).filter(function(e){return e.date===reportDate;});
+var plant=(D.plant||[]).filter(function(e){return e.status==='Active'||e.status==='Idle';});
+var meets=(D.meetings||[]).filter(function(e){return e.date===reportDate;});
+var reportsToday=(D.savedReports||[]).filter(function(e){return e.date===reportDate;}).length+1;
+var rn='COW/'+reportsToday+'/'+reportDate.substring(0,4);
+var isToday=reportDate===today();
+var totalWorkers=0;
+for(var i=0;i<lab.length;i++){totalWorkers+=parseInt(lab[i].mainCount||0)+parseInt(lab[i].subCount||0);}
+
+// Build work progress from diary
+var workText='';
+for(var i=0;i<dt.length;i++){
+workText+=dt[i].activity+' — '+dt[i].location+'\\n'+dt[i].obs+(dt[i].remarks?' ('+dt[i].remarks+')':'')+'\\n\\n';
+}
+if(!workText)workText='No diary entries for this date.\\n';
+
+// Build labour table
+var labourTable='';
+var trades=['Site Agent','Masons','Carpenters','Steel Fixers','Plumbers','Painters','General','Other'];
+for(var t=0;t<trades.length;t++){
+var m=0,s=0;
+for(var l=0;l<lab.length;l++){if(lab[l].trade===trades[t]){m+=parseInt(lab[l].mainCount||0);s+=parseInt(lab[l].subCount||0);}}
+if(m>0||s>0)labourTable+='<tr><td>'+trades[t]+'</td><td>'+m+'</td><td>'+s+'</td></tr>';
+}
+if(!labourTable)labourTable='<tr><td colspan="3">No labour recorded</td></tr>';
+
+// Build plant table
+var plantTable='';
+for(var i=0;i<plant.length;i++){
+plantTable+='<tr><td>'+plant[i].name+'</td><td>'+(plant[i].qty||'1')+'</td><td>'+plant[i].status+'</td></tr>';
+}
+if(!plantTable)plantTable='<tr><td colspan="3">No plant recorded</td></tr>';
+
+// Build materials
+var matText='';
+for(var i=0;i<mats.length;i++){
+matText+=(i+1)+'. '+mats[i].name+' — '+mats[i].qty+' '+mats[i].unit+' from '+mats[i].source+'\\n';
+}
+if(!matText)matText='No deliveries recorded.\\n';
+
+// Build inspections
+var inspText='';
+for(var i=0;i<insp.length;i++){
+var p=0,f=0;
+for(var j=0;j<insp[i].items.length;j++){if(insp[i].items[j].pass)p++;else f++;}
+inspText+=insp[i].phase+' at '+insp[i].location+': '+p+'/'+(p+f)+' passed\\n';
+}
+if(!inspText)inspText='No inspections recorded.\\n';
+
+// Build NCRs
+var ncrText='';
+for(var i=0;i<ncrs.length;i++){
+ncrText+=(i+1)+'. '+ncrs[i].title+' ('+ncrs[i].severity+') — '+ncrs[i].desc.substring(0,80)+'... ['+ncrs[i].status+']\\n';
+}
+if(!ncrText)ncrText='No NCRs raised.\\n';
+
+// Build SIs
+var siText='';
+for(var i=0;i<sis.length;i++){
+siText+=(i+1)+'. To: '+sis[i].issuedTo+' — '+sis[i].desc.substring(0,60)+'... (Deadline: '+sis[i].deadline+')\\n';
+}
+if(!siText)siText='No site instructions issued.\\n';
+
+// Build delays
+var delayText='';
+var totalHrs=0;
+for(var i=0;i<delays.length;i++){
+delayText+=delays[i].cause+' — '+delays[i].duration+' hrs ('+delays[i].impact+')\\n';
+totalHrs+=parseInt(delays[i].duration||0);
+}
+if(!delayText)delayText='No delays recorded.\\n';
+
+// Build meetings
+var meetText='';
+for(var i=0;i<meets.length;i++){
+meetText+=meets[i].meetingNo+' at '+meets[i].venue+': '+meets[i].agenda.substring(0,60)+'...\\n';
+}
+
+return '<div style="background:#2C2C2E;border-radius:8px;padding:8px;margin-bottom:10px">'+
+'<div style="text-align:center"><label style="color:#F78166;font-size:12px">📅 Select Report Date:</label><br>'+
+'<input type="date" id="_reportDatePicker" value="'+reportDate+'" max="'+today()+'" style="width:auto;display:inline-block;font-size:16px;text-align:center;background:#333;color:#fff;border:1px solid #ff9f0a;border-radius:8px;padding:8px;margin:5px 0" onchange="reportDate=this.value;go(\'report\')">'+
+'<br><small style="color:#A0A0B8;font-size:10px">'+(isToday?'📅 TODAY':rdate())+'</small></div>'+
+'</div>'+
+
+'<div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap">'+
+'<button class="btn btn-sm btn-blue" onclick="printReport()">📄 PDF</button>'+
+'<button class="btn btn-sm btn-green" onclick="copyReport()">📱 Share</button>'+
+'<button class="btn btn-sm" style="background:#636366" onclick="printReport()">🖨️ Print</button>'+
+'<button class="btn btn-sm" style="background:#FF9500" onclick="saveReport()">💾 Save</button>'+
+'<button class="btn btn-sm btn-secondary" onclick="go(\'report\')">🔄 Refresh</button>'+
+'</div>'+
+
+'<div class="report-preview" id="rp" contenteditable="true" style="font-size:11px">'+
+'<h3>CLERK OF WORKS — DAILY SITE REPORT</h3>'+
+'<p style="text-align:center;color:#666;font-size:10px">Republic of Kenya — Ministry of Public Works Format</p>'+
+'<hr>'+
+'<p><strong>CONTRACT NO:</strong> '+(D.contractNo||'___________')+' <strong>PROJECT:</strong> '+(D.projectName||'________________________')+'</p>'+
+'<p><strong>CONTRACTOR:</strong> '+(D.mainContractor||'________________________')+' <strong>DATE:</strong> '+rdate()+'</p>'+
+'<p><strong>DAY NO:</strong> _______ <strong>WEEK NO:</strong> _______</p>'+
+'<p><strong>REPORT NO:</strong> '+rn+' <strong>REPORTED BY:</strong> '+(D.cowName||'________________________')+'</p>'+
+'<p><strong>WEATHER:</strong> ☐ Sunny ☐ Cloudy ☐ Rainy ☐ Stormy <strong>TEMP:</strong> Min: ___°C Max: ___°C</p>'+
+'<hr>'+
+'<h4>1.0 WORK IN PROGRESS</h4>'+
+'<p>'+workText.replace(/\\n/g,'<br>')+'</p>'+
+'<hr>'+
+'<h4>2.0 LABOUR ON SITE</h4>'+
+'<table><tr><th>Trade</th><th>Main Contractor</th><th>Sub-Contractor</th></tr>'+labourTable+'<tr><th>TOTAL</th><th colspan="2">'+totalWorkers+' workers</th></tr></table>'+
+'<hr>'+
+'<h4>3.0 PLANT & EQUIPMENT ON SITE</h4>'+
+'<table><tr><th>Equipment</th><th>Qty</th><th>Status</th></tr>'+plantTable+'</table>'+
+'<hr>'+
+'<h4>4.0 MATERIALS DELIVERED</h4>'+
+'<p>'+matText.replace(/\\n/g,'<br>')+'</p>'+
+'<hr>'+
+'<h4>5.0 INSPECTIONS, TESTS & CONCRETE CUBES</h4>'+
+'<p>'+inspText.replace(/\\n/g,'<br>')+'</p>'+
+'<hr>'+
+'<h4>6.0 NON-CONFORMANCE REPORTS (NCRs)</h4>'+
+'<p>'+ncrText.replace(/\\n/g,'<br>')+'</p>'+
+'<hr>'+
+'<h4>7.0 SITE INSTRUCTIONS ISSUED</h4>'+
+'<p>'+siText.replace(/\\n/g,'<br>')+'</p>'+
+'<hr>'+
+'<h4>8.0 DELAYS / DISRUPTIONS</h4>'+
+'<p><strong>Total Time Lost:</strong> '+totalHrs+' hours</p>'+
+'<p>'+delayText.replace(/\\n/g,'<br>')+'</p>'+
+'<hr>'+
+'<h4>9.0 HEALTH & SAFETY OBSERVATIONS</h4>'+
+'<p>☐ PPE worn ☐ Access/egress clear ☐ Scaffold safe ☐ First aid available ☐ Fire equipment in place</p>'+
+'<p><strong>Incidents:</strong> None reported</p>'+
+'<hr>'+
+'<h4>10.0 GENERAL REMARKS</h4>'+
+'<p>Work is progressing in accordance with the approved programme and specifications unless otherwise noted. Contractor is reminded to maintain quality standards and adhere to all safety requirements.</p>'+
+'<hr>'+
+'<div style="display:flex;justify-content:space-between;margin-top:10px">'+
+'<div style="text-align:center">_________________<br><b>'+(D.cowName||'[COW Name]')+'</b><br><small>Clerk of Works</small><br>Date: '+rdate()+'</div>'+
+'<div style="text-align:center">_________________<br><b>'+(D.contractorRepName||'[Contractor Rep]')+'</b><br><small>Contractor\'s Representative</small><br>Date: ................</div>'+
+'</div>'+
+'<p style="text-align:center;font-size:8px;margin-top:10px">Generated by Construction Manager | '+rn+' | '+reportDate+'</p>'+
+'</div>'+
+'<p style="color:#ff9f0a;margin-top:8px;text-align:center;font-size:11px">💡 <em>Click anywhere on the report to edit directly before printing.</em></p>';
+};
+
+function saveReport(){
+if(!D.savedReports)D.savedReports=[];
+D.savedReports.push({
+id:uid(),date:reportDate,reportNo:'COW/'+((D.savedReports||[]).filter(function(e){return e.date===reportDate;}).length+1)+'/'+reportDate.substring(0,4),
+projectName:D.projectName,contractorName:D.mainContractor,contractNo:D.contractNo,cowName:D.cowName,
+diaryCount:(D.diaries||[]).filter(function(e){return e.date===reportDate;}).length,
+inspectionCount:(D.inspections||[]).filter(function(e){return e.date===reportDate;}).length,
+ncrCount:(D.ncrs||[]).filter(function(e){return e.date===reportDate;}).length,
+siCount:(D.instructions||[]).filter(function(e){return e.date===reportDate;}).length,
+labourTotal:0,timestamp:Date.now()
+});
+save();toast('💾 Report saved!');go('report');
+}
+
+function printReport(){
+var c=document.getElementById('rp').innerHTML;
+var w=window.open('','_blank','width=900,height=700');
+w.document.write('<!DOCTYPE html><html><head><title>Daily Site Report</title><style>body{font-family:"Courier New",monospace;font-size:10px;line-height:1.4;padding:15px;color:#000}table{border-collapse:collapse;width:100%}th,td{border:1px solid #000;padding:3px}hr{border:1px solid #000}h3{text-align:center;font-size:13px}h4{font-size:11px;margin:6px 0}@media print{body{margin:0;padding:8px}}</style></head><body>'+c+'</body></html>');
+w.document.close();
+setTimeout(function(){w.print();},500);
+}
+
+function copyReport(){
+var c=document.getElementById('rp').innerText;
+navigator.clipboard.writeText(c).then(function(){toast('📋 Report copied!');});
+}
+// ============ PROJECT SETTINGS ============
+RENDER['project']=function(){
+return '<h2>📋 Project Settings</h2>'+
+'<label>Project Name:</label><input id="projectName">'+
+'<div class="row"><div><label>Contract No:</label><input id="contractNo"></div><div><label>W.P. Item No:</label><input id="wpItemNo"></div></div>'+
+'<div class="row"><div><label>Site Location:</label><input id="siteLocation"></div><div><label>County:</label><input id="county"></div></div>'+
+'<label>Main Contractor:</label><input id="mainContractor">'+
+'<h4 style="margin-top:15px">Site Conditions</h4>'+
+'<div class="row"><div><label>Weather AM:</label><select id="weatherMorning"><option value="">—</option><option>Sunny</option><option>Rainy</option><option>Cloudy</option><option>Windy</option></select></div><div><label>Weather PM:</label><select id="weatherAfternoon"><option value="">—</option><option>Sunny</option><option>Rainy</option><option>Cloudy</option><option>Windy</option></select></div></div>'+
+'<div class="row"><div><label>Ground:</label><select id="groundCondition"><option value="">—</option><option>Dry</option><option>Muddy</option><option>Flooded</option></select></div><div><label>Temp/Notes:</label><input id="tempNotes"></div></div>'+
+'<h4 style="margin-top:15px">Sign-Off Details</h4>'+
+'<div class="row"><div><label>COW Name:</label><input id="cowName"></div><div><label>Date/Time:</label><input id="cowDateTime"></div></div>'+
+'<div class="row"><div><label>Contractor Rep:</label><input id="contractorRepName"></div><div><label>Date/Time:</label><input id="contractorRepDateTime"></div></div>'+
+'<br><button class="btn" onclick="save();toast(\'Settings saved!\');go(\'diary\')">💾 Save Settings</button>';
+};
+
+// Add settings to nav
+NAV.push({id:'project',label:'⚙️ Settings'});
+
+// ============ INIT ============
+nav();go('dashboard');
+</script>
+</body>
+</html>
