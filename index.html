@@ -109,7 +109,7 @@ var MEETING_AGENDA=["Confirmation of Previous Minutes","Progress Review","Qualit
 var CONCRETE_MIXES={"C15/20 Blinding":{"ratio":"1:3:6","cement":"250kg (5 bags)","sand":"0.45m3","ballast":"0.9m3","water":"125L","use":"Blinding, lean concrete"},"C20/25 Light Duty":{"ratio":"1:2.5:5","cement":"300kg (6 bags)","sand":"0.44m3","ballast":"0.88m3","water":"150L","use":"Light duty floors"},"C25/30 General RC":{"ratio":"1:2:4","cement":"350kg (7 bags)","sand":"0.42m3","ballast":"0.84m3","water":"175L","use":"Slabs, beams, columns"},"C30/37 Heavy Duty":{"ratio":"1:2:3","cement":"400kg (8 bags)","sand":"0.40m3","ballast":"0.80m3","water":"200L","use":"Heavy duty, water retaining"},"C35/45 Precast":{"ratio":"1:1.5:3","cement":"450kg (9 bags)","sand":"0.38m3","ballast":"0.76m3","water":"200L","use":"Precast elements"},"C40/50 High Strength":{"ratio":"1:1.5:2.5","cement":"500kg (10 bags)","sand":"0.36m3","ballast":"0.72m3","water":"200L","use":"Bridge works"}};
 
 // ============ NAVIGATION ============
-var NAV=[{id:"dashboard",label:"Home"},{id:"diary",label:"Diary"},{id:"inspections",label:"Inspections"},{id:"ncr",label:"NCRs"},{id:"instructions",label:"S.I."},{id:"materials",label:"Materials"},{id:"stock",label:"Stock"},{id:"cubes",label:"Cubes"},{id:"concrete",label:"Concrete"},{id:"labour",label:"Labour"},{id:"plant",label:"Plant"},{id:"finishes",label:"Finishes"},{id:"fixtures",label:"Fixtures"},{id:"meetings",label:"Meetings"},{id:"delays",label:"Delays"},{id:"drawings",label:"Drawings"},{id:"rfi",label:"RFIs"},{id:"stopwork",label:"Stop Work"},{id:"rejections",label:"Rejections"},{id:"report",label:"REPORT"},{id:"project",label:"Settings"}];
+var NAV=[{id:"dashboard",label:"Home"},{id:"diary",label:"Diary"},{id:"inspections",label:"Inspections"},{id:"ncr",label:"NCRs"},{id:"instructions",label:"S.I."},{id:"materials",label:"Materials"},{id:"stock",label:"Stock"},{id:"cubes",label:"Cubes"},{id:"concrete",label:"Concrete"},{id:"labour",label:"Labour"},{id:"plant",label:"Plant"},{id:"finishes",label:"Finishes"},{id:"fixtures",label:"Fixtures"},{id:"openings",label:"Openings"},{id:"services",label:"Services"},{id:"meetings",label:"Meetings"},{id:"delays",label:"Delays"},{id:"drawings",label:"Drawings"},{id:"rfi",label:"RFIs"},{id:"stopwork",label:"Stop Work"},{id:"rejections",label:"Rejections"},{id:"report",label:"REPORT"},{id:"project",label:"Settings"}];
 var current="dashboard";
 function nav(){
 var h="";for(var i=0;i<NAV.length;i++){h+='<button class="'+(NAV[i].id===current?"active":"")+'" onclick="go(\''+NAV[i].id+'\')">'+NAV[i].label+'</button>';}
@@ -619,6 +619,99 @@ function saveFixture(){
 if(!D.fixtures)D.fixtures=[];
 D.fixtures.push({id:uid(),date:document.getElementById("_entryDate").value,category:document.getElementById("_fixCat").value,name:document.getElementById("_fixItem").value,location:document.getElementById("_fixLoc").value,qty:document.getElementById("_fixQty").value,status:document.getElementById("_fixStatus").value,notes:document.getElementById("_fixNotes").value,timestamp:Date.now()});
 save();toast("Fixture saved!");go("fixtures");
+}
+// ============ OPENINGS (Doors & Windows) ============
+var OPENING_TYPES={
+"External Doors":["Main entrance door - Solid hardwood","Main entrance door - Panel","Patio door - Sliding aluminium","Patio door - French","Back door - Flush","Garage door - Roller","Garage door - Sectional","Steel security door"],
+"Internal Doors":["Flush door 2100x900","Flush door 2100x800","Panel door 2100x900","Panel door 2100x800","Flush door 2100x700 (toilet)","Flush door 2100x600 (store)","Sliding door - timber","Bi-fold door","Pocket door","Louvre door - closet","Louvre door - pantry"],
+"Door Frames":["Hardwood frame 100x50mm","Softwood frame 100x50mm","Metal frame 100x50mm","Aluminium frame","Frame with sidelight","Frame with fanlight"],
+"Windows - Aluminium":["Sliding window 1200x1200","Sliding window 1500x1200","Sliding window 1800x1200","Casement window 600x600","Casement window 600x900","Casement window 900x1200","Fixed window 600x1200","Fixed window 1200x1200","Corner window","Bay window"],
+"Windows - Steel":["Casement window 600x900","Casement window 900x1200","Fixed window 600x600","Louvre window 600x900","Louvre window 900x1200","Basement window 600x300"],
+"Windows - Timber":["Casement window 600x900","Casement window 900x1200","Sliding window 1200x1200","Fixed window 600x600"],
+"Glass/Glazing":["Clear float 4mm","Clear float 6mm","Clear float 10mm","Tinted bronze 5mm","Tinted grey 5mm","Obscured 4mm (bathroom)","Laminated safety 6mm","Toughened 6mm","Toughened 10mm","Double glazed unit","Mirror 4mm","Mirror 6mm"],
+"Curtain Walling":["Aluminium curtain wall - stick","Aluminium curtain wall - unitized","Structural glazing","Spider glazing","Skylight/Atrium glazing"]
+};
+var OPENING_STATUS=["Not installed","Frame installed","Leaf/sash installed","Glazed","Hardware fitted","Inspected","Snagged","Completed"];
+
+RENDER["openings"]=function(){
+var h='<h2>Openings Schedule</h2><p style="color:#aaa;font-size:12px">Doors, Windows & Glazing</p>';
+h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showOpeningForm()">+ Add Opening</button></div>';
+var openings=(D.openings||[]);
+if(openings.length===0){h+='<p style="color:#666">No openings recorded. Add doors, windows and glazing.</p>';}
+else{
+var cats={};for(var i=0;i<openings.length;i++){var o=openings[i];if(!cats[o.category])cats[o.category]=[];cats[o.category].push(o);}
+var ck=Object.keys(cats);
+for(var c=0;c<ck.length;c++){var cat=ck[c];var items=cats[cat];
+h+='<div class="card"><h4>'+cat+'</h4><table style="font-size:11px"><tr><th>Ref</th><th>Size</th><th>Location</th><th>Qty</th><th>Status</th></tr>';
+for(var i=0;i<items.length;i++){var o=items[i];h+='<tr><td>'+o.ref+'</td><td>'+o.size+'</td><td>'+o.location+'</td><td>'+o.qty+'</td><td><span class="tag '+(o.status==="Completed"?"tag-pass":o.status==="Installed"||o.status==="Glazed"?"tag-open":"")+'">'+o.status+'</span></td></tr>';}
+h+='</table></div>';
+}
+}
+return h;
+};
+
+function showOpeningForm(){
+var cats="";var ck=Object.keys(OPENING_TYPES);for(var i=0;i<ck.length;i++){cats+='<option>'+ck[i]+'</option>';}
+var h='<h3>Add Opening</h3><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'" max="'+today()+'"><label>Category:</label><select id="_opCat" onchange="loadOpeningItems()">'+cats+'</select><label>Type/Description:</label><select id="_opItem"></select><label>Reference:</label><input id="_opRef" placeholder="e.g. D01 / W05"><label>Size:</label><input id="_opSize" placeholder="e.g. 2100x900mm"><label>Location/Room:</label><input id="_opLoc" placeholder="e.g. Master Bedroom"><div class="row"><div><label>Quantity:</label><input id="_opQty" type="number" value="1"></div><div><label>Status:</label><select id="_opStatus">';
+for(var i=0;i<OPENING_STATUS.length;i++){h+='<option>'+OPENING_STATUS[i]+'</option>';}
+h+='</select></div></div><label>Notes:</label><input id="_opNotes"><button class="btn" onclick="saveOpening()">Save Opening</button><button class="btn btn-secondary" onclick="go(\'openings\')">Cancel</button>';
+document.getElementById("content").innerHTML=h;loadOpeningItems();
+}
+
+function loadOpeningItems(){var cat=document.getElementById("_opCat").value;var items=OPENING_TYPES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_opItem").innerHTML=h;}
+
+function saveOpening(){
+if(!D.openings)D.openings=[];
+D.openings.push({id:uid(),date:document.getElementById("_entryDate").value,category:document.getElementById("_opCat").value,type:document.getElementById("_opItem").value,ref:document.getElementById("_opRef").value,size:document.getElementById("_opSize").value,location:document.getElementById("_opLoc").value,qty:document.getElementById("_opQty").value,status:document.getElementById("_opStatus").value,notes:document.getElementById("_opNotes").value,timestamp:Date.now()});
+save();toast("Opening saved!");go("openings");
+}
+// ============ SERVICES ============
+var SERVICE_CATEGORIES={
+"Plumbing - Supply":["HDPE main supply 25mm","HDPE main supply 32mm","HDPE main supply 50mm","PPR cold water 20mm","PPR cold water 25mm","PPR hot water 20mm","PPR hot water 25mm","Gate valve 25mm","Gate valve 50mm","Stop cock 15mm","Water meter","Pressure reducing valve","Booster pump","Water tank connection"],
+"Plumbing - Drainage":["PVC soil pipe 110mm","PVC soil pipe 160mm","PVC waste pipe 50mm","PVC waste pipe 40mm","PVC waste pipe 32mm","Floor trap 50mm","Bottle gully","P-trap","S-trap","Vent pipe 50mm","Vent cowl","Inspection chamber 450x450","Inspection chamber 600x450","Manhole cover - light duty","Manhole cover - heavy duty","Interceptor trap","Grease trap","Sump pump"],
+"Plumbing - Roof Drainage":["Gutter UPVC 100mm","Gutter UPVC 150mm","Downpipe UPVC 100mm","Downpipe UPVC 150mm","Rainwater head","Shoe/Cap","Gutter bracket","Downpipe clip","First flush diverter","Rainwater harvesting tank"],
+"Electrical - Power":["Main cable 16mm2","Main cable 25mm2","Sub-main cable 10mm2","Ring circuit 2.5mm2","Lighting circuit 1.5mm2","Cooker circuit 6mm2","Geyser circuit 4mm2","DB - Main panel","DB - Sub panel","MCB 10A","MCB 16A","MCB 20A","MCB 32A","RCD 40A 30mA","RCD 63A 30mA","Isolator 60A","Changeover switch","Earthing rod 1.5m","Earth wire 10mm2"],
+"Electrical - Lighting":["LED downlight 10W","LED downlight 18W","LED panel 600x600","LED strip","Pendant light","Wall light","Bulkhead light","Emergency light","Exit sign","Sensor/PIR light","Garden light","Bollard light","Floodlight 50W"],
+"Electrical - Containment":["PVC conduit 20mm","PVC conduit 25mm","PVC trunking 25x16mm","PVC trunking 38x25mm","Metal trunking 50x50mm","Cable tray 150mm","Cable tray 300mm","Draw box","Junction box"],
+"Fire Services":["Fire extinguisher CO2 2kg","Fire extinguisher DCP 6kg","Fire extinguisher DCP 9kg","Fire hose reel","Fire hydrant","Sprinkler head","Smoke detector","Heat detector","Fire alarm panel","Manual call point","Fire bell","Fire door 2100x900 1hr","Fire door 2100x900 2hr","Emergency light","Exit sign","Fire blanket"],
+"HVAC":["AC split unit 12000BTU","AC split unit 18000BTU","AC split unit 24000BTU","AC cassette unit","AC ducted unit","Extractor fan 150mm","Extractor fan 250mm","Ceiling fan 56in","Wall fan","Fresh air intake","Air curtain","Mechanical ventilation"],
+"Security":["CCTV camera - Dome","CCTV camera - Bullet","CCTV NVR/DVR","Video intercom","Access control - Card","Access control - Biometric","Electric fence","Burglar bars","Security gate","Motion sensor","Alarm panel","Panic button"],
+"Data/Comms":["Data outlet RJ45","Data cable CAT6","Patch panel 24 port","Network switch","WiFi access point","Telephone outlet","TV outlet - Coaxial","TV outlet - Satellite","Fibre termination box","Server rack"],
+"External Services":["External water point","External power point","Hose reel","Drainage channel","Yard gully","Soak pit","Septic tank 5000L","Underground tank 10000L","Sewer connection - main line","Sewer connection - septic"]
+};
+var SERVICE_STATUS=["Rough-in","First fix","Second fix","Testing","Commissioned","Completed"];
+
+RENDER["services"]=function(){
+var h='<h2>Building Services</h2><p style="color:#aaa;font-size:12px">Plumbing, Electrical, Fire, HVAC</p>';
+h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showServiceForm()">+ Add Service</button></div>';
+var services=(D.services||[]);
+if(services.length===0){h+='<p style="color:#666">No services recorded. Add plumbing, electrical and other services.</p>';}
+else{
+var cats={};for(var i=0;i<services.length;i++){var s=services[i];if(!cats[s.category])cats[s.category]=[];cats[s.category].push(s);}
+var ck=Object.keys(cats);
+for(var c=0;c<ck.length;c++){var cat=ck[c];var items=cats[cat];
+h+='<div class="card"><h4>'+cat+'</h4><table style="font-size:11px"><tr><th>Item</th><th>Location</th><th>Status</th><th>Test Result</th></tr>';
+for(var i=0;i<items.length;i++){var s=items[i];h+='<tr><td>'+s.name+'</td><td>'+s.location+'</td><td><span class="tag '+(s.status==="Completed"||s.status==="Commissioned"?"tag-pass":s.status==="Testing"?"tag-open":"")+'">'+s.status+'</span></td><td style="font-size:10px">'+(s.testResult||"-")+'</td></tr>';}
+h+='</table></div>';
+}
+}
+return h;
+};
+
+function showServiceForm(){
+var cats="";var ck=Object.keys(SERVICE_CATEGORIES);for(var i=0;i<ck.length;i++){cats+='<option>'+ck[i]+'</option>';}
+var h='<h3>Add Service</h3><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'" max="'+today()+'"><label>Category:</label><select id="_svcCat" onchange="loadServiceItems()">'+cats+'</select><label>Item/Description:</label><select id="_svcItem"></select><label>Location:</label><input id="_svcLoc" placeholder="e.g. Kitchen"><label>Status:</label><select id="_svcStatus">';
+for(var i=0;i<SERVICE_STATUS.length;i++){h+='<option>'+SERVICE_STATUS[i]+'</option>';}
+h+='</select><label>Test Result:</label><select id="_svcTest"><option value="">Not tested</option><option value="Pass">Pass</option><option value="Fail">Fail</option><option value="Pending">Pending</option></select><label>Notes:</label><input id="_svcNotes"><button class="btn" onclick="saveService()">Save Service</button><button class="btn btn-secondary" onclick="go(\'services\')">Cancel</button>';
+document.getElementById("content").innerHTML=h;loadServiceItems();
+}
+
+function loadServiceItems(){var cat=document.getElementById("_svcCat").value;var items=SERVICE_CATEGORIES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_svcItem").innerHTML=h;}
+
+function saveService(){
+if(!D.services)D.services=[];
+D.services.push({id:uid(),date:document.getElementById("_entryDate").value,category:document.getElementById("_svcCat").value,name:document.getElementById("_svcItem").value,location:document.getElementById("_svcLoc").value,status:document.getElementById("_svcStatus").value,testResult:document.getElementById("_svcTest").value,notes:document.getElementById("_svcNotes").value,timestamp:Date.now()});
+save();toast("Service saved!");go("services");
 }
 RENDER["report"]=function(){
 reportDate=globalDate;
