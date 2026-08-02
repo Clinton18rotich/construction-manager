@@ -109,7 +109,7 @@ var MEETING_AGENDA=["Confirmation of Previous Minutes","Progress Review","Qualit
 var CONCRETE_MIXES={"C15/20 Blinding":{"ratio":"1:3:6","cement":"250kg (5 bags)","sand":"0.45m3","ballast":"0.9m3","water":"125L","use":"Blinding, lean concrete"},"C20/25 Light Duty":{"ratio":"1:2.5:5","cement":"300kg (6 bags)","sand":"0.44m3","ballast":"0.88m3","water":"150L","use":"Light duty floors"},"C25/30 General RC":{"ratio":"1:2:4","cement":"350kg (7 bags)","sand":"0.42m3","ballast":"0.84m3","water":"175L","use":"Slabs, beams, columns"},"C30/37 Heavy Duty":{"ratio":"1:2:3","cement":"400kg (8 bags)","sand":"0.40m3","ballast":"0.80m3","water":"200L","use":"Heavy duty, water retaining"},"C35/45 Precast":{"ratio":"1:1.5:3","cement":"450kg (9 bags)","sand":"0.38m3","ballast":"0.76m3","water":"200L","use":"Precast elements"},"C40/50 High Strength":{"ratio":"1:1.5:2.5","cement":"500kg (10 bags)","sand":"0.36m3","ballast":"0.72m3","water":"200L","use":"Bridge works"}};
 
 // ============ NAVIGATION ============
-var NAV=[{id:"dashboard",label:"Home"},{id:"diary",label:"Diary"},{id:"inspections",label:"Inspections"},{id:"ncr",label:"NCRs"},{id:"instructions",label:"S.I."},{id:"materials",label:"Materials"},{id:"stock",label:"Stock"},{id:"cubes",label:"Cubes"},{id:"concrete",label:"Concrete"},{id:"labour",label:"Labour"},{id:"plant",label:"Plant"},{id:"finishes",label:"Finishes"},{id:"fixtures",label:"Fixtures"},{id:"openings",label:"Openings"},{id:"services",label:"Services"},{id:"meetings",label:"Meetings"},{id:"delays",label:"Delays"},{id:"drawings",label:"Drawings"},{id:"rfi",label:"RFIs"},{id:"stopwork",label:"Stop Work"},{id:"rejections",label:"Rejections"},{id:"report",label:"REPORT"},{id:"project",label:"Settings"}];
+var NAV=[{id:"dashboard",label:"Home"},{id:"diary",label:"Diary"},{id:"inspections",label:"Inspections"},{id:"ncr",label:"NCRs"},{id:"instructions",label:"S.I."},{id:"materials",label:"Materials"},{id:"stock",label:"Stock"},{id:"cubes",label:"Cubes"},{id:"concrete",label:"Concrete"},{id:"labour",label:"Labour"},{id:"plant",label:"Plant"},{id:"roof",label:"Roof"},{id:"finishes",label:"Finishes"},{id:"fixtures",label:"Fixtures"},{id:"openings",label:"Openings"},{id:"services",label:"Services"},{id:"meetings",label:"Meetings"},{id:"delays",label:"Delays"},{id:"drawings",label:"Drawings"},{id:"rfi",label:"RFIs"},{id:"stopwork",label:"Stop Work"},{id:"rejections",label:"Rejections"},{id:"report",label:"REPORT"},{id:"project",label:"Settings"}];
 var current="dashboard";
 function nav(){
 var h="";for(var i=0;i<NAV.length;i++){h+='<button class="'+(NAV[i].id===current?"active":"")+'" onclick="go(\''+NAV[i].id+'\')">'+NAV[i].label+'</button>';}
@@ -712,6 +712,49 @@ function saveService(){
 if(!D.services)D.services=[];
 D.services.push({id:uid(),date:document.getElementById("_entryDate").value,category:document.getElementById("_svcCat").value,name:document.getElementById("_svcItem").value,location:document.getElementById("_svcLoc").value,status:document.getElementById("_svcStatus").value,testResult:document.getElementById("_svcTest").value,notes:document.getElementById("_svcNotes").value,timestamp:Date.now()});
 save();toast("Service saved!");go("services");
+}
+// ============ ROOFS & ROOF COVERINGS ============
+var ROOF_CATEGORIES={
+"Roof Structure - Timber":["Timber trusses Pine 6m","Timber trusses Pine 9m","Timber trusses Pine 12m","Timber trusses Hardwood 6m","Timber rafters 100x50mm","Timber rafters 150x50mm","Timber purlins 100x50mm","Timber purlins 150x50mm","Wall plate 100x50mm","Wall plate 150x50mm","Tie beam 150x50mm","Collar tie 100x50mm","Struts/braces 100x50mm","Brandering 50x25mm","Counter battens 50x25mm","T&G boards 25x150mm roof deck","T&G boards 25x100mm","T&G boards 19x100mm soffit","Blockboard 18mm flat roof deck"],
+"Roof Structure - Steel":["Steel trusses Angle 50x50x6","Steel trusses Angle 75x75x8","Steel trusses Tubular 50mm","Steel trusses Tubular 75mm","Steel purlins C100x50","Steel purlins C150x65","Steel purlins Z150x65","Steel purlins Z200x75","Steel rafters I-beam","Steel wall plate Channel","Steel tie rod 12mm","Steel tie rod 16mm","Steel cleats/brackets","Base plate 200x200x10mm","Anchor bolts M16","Anchor bolts M20"],
+"Metal Sheet Coverings":["Iron sheets G30 2.0m","Iron sheets G30 2.5m","Iron sheets G30 3.0m","Iron sheets G28 2.5m","Iron sheets G28 3.0m","Iron sheets G32 2.5m","Aluminium sheets 2.5m","Aluminium sheets 3.0m","Box profile 0.5mm","Box profile 0.6mm","Corrugated standard","Corrugated heavy gauge","Pre-painted colour coated","Stone coated steel tiles","Mabati standard","Mabati heavy gauge"],
+"Tile Coverings":["Concrete Double Roman","Concrete Single Roman","Concrete Flat interlocking","Clay Double Roman","Clay Single Roman","Clay Flat","Clay Half round","Mangalore tiles Indian","Decra/Decramastic tiles","Slate natural","Slate fibre cement","Solar roof tiles","Terracotta tiles"],
+"Hidden/Concealed Roof":["Standing seam concealed clip","Hidden fastener profile","Interlocking aluminium panels","Snap-lock standing seam","Crimped standing seam","Flat lock panels","Composite sandwich panels","Built-up roofing BUR","Single-ply PVC membrane","Single-ply TPO membrane","Liquid applied membrane","Torch-on membrane 3mm","Torch-on membrane 4mm","Self-adhesive membrane","Green roof system","Concrete slab roof"],
+"Ridge, Hips & Valleys":["Ridge cap Iron 2.0m","Ridge cap Galvanized 2.0m","Ridge cap Aluminium","Ridge cap Coloured","Ridge cap Tile concrete","Ridge cap Tile clay","Hip cap Iron","Hip cap Tile","Valley gutter Iron","Valley gutter Aluminium","Valley gutter Lead","Ridge seal/foam","Ridge screws with washers","Ridge ventilator","Hip iron/strap","Monoridge ventilated"],
+"Verges, Eaves & Edges":["Verge board timber 6x1","Verge board timber 8x1","Verge board UPVC white","Barge board timber 6x1","Barge board UPVC","Fascia board 6x1","Fascia board 8x1","Fascia board UPVC 150mm","Fascia board UPVC 200mm","Soffit board T&G timber","Soffit board UPVC 300mm","Soffit board UPVC 400mm","Soffit board cement board","Eaves filler comb corrugated","Eaves filler box profile","Verge clip/bracket","Soffit vent circular","Soffit vent strip","Over fascia vent","Bird comb/verge strip","Drip edge/flashing","Eaves angle trim","Fascia bracket","Fascia joint cover"],
+"Roof Drainage":["Gutter UPVC 100mm half round","Gutter UPVC 150mm half round","Gutter UPVC 100mm square","Gutter UPVC 150mm square","Gutter Aluminium 125mm","Gutter Galvanized 100mm","Downpipe UPVC 100mm round","Downpipe UPVC 100mm square","Downpipe UPVC 150mm","Downpipe Aluminium 100mm","Rainwater head/hopper","Shoe/Offset bend 100mm","Gutter bracket fascia mount","Gutter bracket rafter mount","Downpipe clip/strap","Downpipe connector","Gutter union/connector","Stop end left","Stop end right","Gutter angle 90deg","Leaf guard/gutter mesh","First flush diverter","Rainwater filter","Rain chain decorative"],
+"Insulation & Underlay":["Sisalation underlay single foil","Sisalation underlay double foil","Breathable membrane roofshield","Vapour barrier polyethylene","Glass wool 50mm","Glass wool 100mm","Rock wool 50mm","Rock wool 100mm","Polystyrene board 25mm","Polystyrene board 50mm","Spray foam insulation","Reflective foil wrap","Radiant barrier","Insulation clips/fixings","Underlay nails/clouts"],
+"Windows & Skylights":["Skylight fixed 600x600","Skylight fixed 900x900","Skylight opening 600x900","Skylight opening 900x1200","Skylight dome","Skylight pyramid","Skylight flat glass","Skylight lantern","Roof window centre pivot 550x780","Roof window centre pivot 780x1180","Roof window top hung 780x1180","Roof window flashing kit","Sun tunnel/light pipe","Skylight curb/upstand"],
+"Accessories & Safety":["Roofing nails 75mm 3in","Roofing nails 100mm 4in","Roofing screws hex head","Roofing screws self-drilling","Silicone sealant clear","Silicone sealant grey","Bituminous paint 5L","Anti-rust paint 5L","Roof ladder hook","Roof anchor/safety point","Safety harness full body","Safety line/rope","Walkway platform roof access","Lightning rod/air terminal","Lightning conductor tape","Earth rod","Roof ventilator turbine","Roof ventilator static","Roof ventilator powered","Solar panel mounting kit","Bird spikes","Bird netting","Vermin proofing mesh"]
+};
+var ROOF_STATUS=["Not started","Structure erected","Purlins installed","Underlay done","Covering installed","Ridge/hips done","Valleys done","Verges/eaves done","Gutters installed","Insulation done","Inspected","Completed"];
+RENDER["roof"]=function(){
+var h='<h2>Roofs & Roof Coverings</h2><p style="color:#aaa;font-size:12px">Structure, covering, hidden roofs, drainage, accessories</p>';
+h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showRoofForm()">+ Add Roof Item</button></div>';
+var roof=(D.roof||[]);
+if(roof.length===0){h+='<p style="color:#666">No roof items recorded. Add items from 12 categories including hidden roofs, skylights, verges/eaves.</p>';}
+else{
+var cats={};for(var i=0;i<roof.length;i++){var r=roof[i];if(!cats[r.category])cats[r.category]=[];cats[r.category].push(r);}
+var ck=Object.keys(cats);
+for(var c=0;c<ck.length;c++){var cat=ck[c];var items=cats[cat];
+h+='<div class="card"><h4>'+cat+' ('+items.length+')</h4><table style="font-size:11px"><tr><th>Item</th><th>Location</th><th>Qty</th><th>Status</th></tr>';
+for(var i=0;i<items.length;i++){var r=items[i];h+='<tr><td>'+r.name+'</td><td>'+r.location+'</td><td>'+r.qty+' '+r.unit+'</td><td><span class="tag '+(r.status==="Completed"||r.status==="Inspected"?"tag-pass":"tag-open")+'">'+r.status+'</span></td></tr>';}
+h+='</table></div>';}
+}
+return h;
+};
+function showRoofForm(){
+var cats="";var ck=Object.keys(ROOF_CATEGORIES);for(var i=0;i<ck.length;i++){cats+='<option value="'+ck[i]+'">'+ck[i]+'</option>';}
+var h='<h3>Add Roof Item</h3><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'" max="'+today()+'"><label>Category:</label><select id="_rfCat" onchange="loadRoofItems()">'+cats+'</select><label>Item:</label><select id="_rfItem"></select><label>Location/Area:</label><input id="_rfLoc" placeholder="e.g. Main roof, Verandah"><div class="row"><div><label>Quantity:</label><input id="_rfQty" type="number" value="1"></div><div><label>Unit:</label><select id="_rfUnit"><option>Pieces</option><option>Sheets</option><option>Lengths (m)</option><option>m2</option><option>Rolls</option><option>Sets</option><option>Pairs</option></select></div></div><label>Status:</label><select id="_rfStatus">';
+for(var i=0;i<ROOF_STATUS.length;i++){h+='<option>'+ROOF_STATUS[i]+'</option>';}
+h+='</select><label>Notes:</label><input id="_rfNotes"><button class="btn" onclick="saveRoof()">Save Item</button><button class="btn btn-secondary" onclick="go(\'roof\')">Cancel</button>';
+document.getElementById("content").innerHTML=h;loadRoofItems();
+}
+function loadRoofItems(){var cat=document.getElementById("_rfCat").value;var items=ROOF_CATEGORIES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_rfItem").innerHTML=h;}
+function saveRoof(){
+if(!D.roof)D.roof=[];
+D.roof.push({id:uid(),date:document.getElementById("_entryDate").value,category:document.getElementById("_rfCat").value,name:document.getElementById("_rfItem").value,location:document.getElementById("_rfLoc").value,qty:document.getElementById("_rfQty").value,unit:document.getElementById("_rfUnit").value,status:document.getElementById("_rfStatus").value,notes:document.getElementById("_rfNotes").value,timestamp:Date.now()});
+save();toast("Roof item saved!");go("roof");
 }
 RENDER["report"]=function(){
 reportDate=globalDate;
