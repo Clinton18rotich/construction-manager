@@ -109,7 +109,7 @@ var MEETING_AGENDA=["Confirmation of Previous Minutes","Progress Review","Qualit
 var CONCRETE_MIXES={"C15/20 Blinding":{"ratio":"1:3:6","cement":"250kg (5 bags)","sand":"0.45m3","ballast":"0.9m3","water":"125L","use":"Blinding, lean concrete"},"C20/25 Light Duty":{"ratio":"1:2.5:5","cement":"300kg (6 bags)","sand":"0.44m3","ballast":"0.88m3","water":"150L","use":"Light duty floors"},"C25/30 General RC":{"ratio":"1:2:4","cement":"350kg (7 bags)","sand":"0.42m3","ballast":"0.84m3","water":"175L","use":"Slabs, beams, columns"},"C30/37 Heavy Duty":{"ratio":"1:2:3","cement":"400kg (8 bags)","sand":"0.40m3","ballast":"0.80m3","water":"200L","use":"Heavy duty, water retaining"},"C35/45 Precast":{"ratio":"1:1.5:3","cement":"450kg (9 bags)","sand":"0.38m3","ballast":"0.76m3","water":"200L","use":"Precast elements"},"C40/50 High Strength":{"ratio":"1:1.5:2.5","cement":"500kg (10 bags)","sand":"0.36m3","ballast":"0.72m3","water":"200L","use":"Bridge works"}};
 
 // ============ NAVIGATION ============
-var NAV=[{id:"dashboard",label:"Home"},{id:"diary",label:"Diary"},{id:"inspections",label:"Inspections"},{id:"ncr",label:"NCRs"},{id:"instructions",label:"S.I."},{id:"materials",label:"Materials"},{id:"stock",label:"Stock"},{id:"cubes",label:"Cubes"},{id:"concrete",label:"Concrete"},{id:"labour",label:"Labour"},{id:"plant",label:"Plant"},{id:"meetings",label:"Meetings"},{id:"delays",label:"Delays"},{id:"drawings",label:"Drawings"},{id:"rfi",label:"RFIs"},{id:"stopwork",label:"Stop Work"},{id:"rejections",label:"Rejections"},{id:"report",label:"REPORT"},{id:"project",label:"Settings"}];
+var NAV=[{id:"dashboard",label:"Home"},{id:"diary",label:"Diary"},{id:"inspections",label:"Inspections"},{id:"ncr",label:"NCRs"},{id:"instructions",label:"S.I."},{id:"materials",label:"Materials"},{id:"stock",label:"Stock"},{id:"cubes",label:"Cubes"},{id:"concrete",label:"Concrete"},{id:"labour",label:"Labour"},{id:"plant",label:"Plant"},{id:"finishes",label:"Finishes"},{id:"meetings",label:"Meetings"},{id:"delays",label:"Delays"},{id:"drawings",label:"Drawings"},{id:"rfi",label:"RFIs"},{id:"stopwork",label:"Stop Work"},{id:"rejections",label:"Rejections"},{id:"report",label:"REPORT"},{id:"project",label:"Settings"}];
 var current="dashboard";
 function nav(){
 var h="";for(var i=0;i<NAV.length;i++){h+='<button class="'+(NAV[i].id===current?"active":"")+'" onclick="go(\''+NAV[i].id+'\')">'+NAV[i].label+'</button>';}
@@ -513,6 +513,66 @@ if(!D.materialRejections)D.materialRejections=[];
 D.materialRejections.push({id:uid(),date:document.getElementById("_entryDate").value,category:document.getElementById("_mrnCat").value,reason:document.getElementById("_mrnItem").value,material:document.getElementById("_mrnMat").value,qty:document.getElementById("_mrnQty").value,supplier:document.getElementById("_mrnSupp").value,action:document.getElementById("_mrnAction").value,timestamp:Date.now()});
 save();toast("MRN saved!");go("rejections");
 }
+// ============ SCHEDULE OF FINISHES ============
+var FINISH_TYPES={
+"Floor Finishes":["Screed only","Ceramic tiles 400x400","Ceramic tiles 500x500","Ceramic tiles 600x600","Porcelain tiles","Terrazzo","Epoxy floor","PVC tiles","Wood parquet","Carpet","Polished concrete","Granite/Marble"],
+"Wall Finishes":["Plaster & paint","Ceramic wall tiles 200x300","Ceramic wall tiles 300x600","Full height tiling","Dado/splashback tiles","Wallpaper","Cladding - timber","Cladding - stone","Fair faced concrete","Textured paint","Glass panels"],
+"Ceiling Finishes":["Plaster & paint","Suspended ceiling - grid","Suspended ceiling - gypsum","Suspended ceiling - acoustic","PVC ceiling panels","Timber ceiling","Exposed concrete","Bulkhead/drop ceiling","Cove ceiling"],
+"Skirting":["Tile skirting 100mm","Tile skirting 150mm","Timber skirting 100mm","Timber skirting 150mm","PVC skirting","Granite skirting","Metal skirting","None"],
+"Architraves":["Timber architrave 50mm","Timber architrave 75mm","PVC architrave","None"],
+"Ironmongery":["Stainless steel","Brass","Chrome","Satin nickel","Black powder coat","White powder coat"]
+};
+var FINISH_ROOMS=["Living Room","Dining Room","Kitchen","Master Bedroom","Bedroom 2","Bedroom 3","Bedroom 4","Master Ensuite","Bathroom 1","Bathroom 2","Guest Toilet","Corridor/Hallway","Staircase","Balcony/Terrace","Store/Utility","External Walls"];
+var FINISH_STATUS=["Not started","In progress","Completed","Inspected","Snagged","Handed over"];
+
+RENDER["finishes"]=function(){
+var h='<h2>Schedule of Finishes</h2><p style="color:#aaa;font-size:12px">Track finishes room by room</p>';
+h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showFinishForm()">+ Add Room Finish</button></div>';
+
+var finishes=(D.finishes||[]).filter(function(e){return e.date===globalDate;});
+if(finishes.length===0){finishes=D.finishes||[];}
+
+var rooms={};
+for(var i=0;i<finishes.length;i++){var f=finishes[i];if(!rooms[f.room])rooms[f.room]=[];rooms[f.room].push(f);}
+
+var roomKeys=Object.keys(rooms);
+if(roomKeys.length===0){h+='<p style="color:#666">No finishes recorded yet. Add rooms and their finish specifications.</p>';}
+else{
+for(var r=0;r<roomKeys.length;r++){var room=roomKeys[r];var items=rooms[room];
+h+='<div class="card"><div style="display:flex;justify-content:space-between"><h4>'+room+'</h4><button class="btn btn-sm" style="background:#ff3b30;color:#fff;padding:4px 8px;font-size:10px" onclick="deleteRoom(\''+room+'\')">Remove Room</button></div>';
+h+='<table style="font-size:11px"><tr><th>Category</th><th>Specification</th><th>Status</th><th>Notes</th></tr>';
+for(var i=0;i<items.length;i++){var f=items[i];
+h+='<tr><td>'+f.category+'</td><td>'+f.spec+'</td><td><span class="tag '+(f.status==="Completed"||f.status==="Handed over"?"tag-pass":f.status==="In progress"?"tag-open":"")+'">'+f.status+'</span></td><td style="font-size:10px">'+(f.notes||"")+'</td></tr>';
+}
+h+='</table></div>';
+}
+}
+return h;
+};
+
+function showFinishForm(){
+var rooms="";for(var i=0;i<FINISH_ROOMS.length;i++){rooms+='<option>'+FINISH_ROOMS[i]+'</option>';}
+var cats="";var ck=Object.keys(FINISH_TYPES);for(var i=0;i<ck.length;i++){cats+='<option>'+ck[i]+'</option>';}
+var h='<h3>Add Room Finish</h3><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'" max="'+today()+'"><label>Room:</label><select id="_fRoom">'+rooms+'</select><label>Category:</label><select id="_fCat" onchange="loadFinishItems()">'+cats+'</select><label>Specification:</label><select id="_fItem"></select><label>Status:</label><select id="_fStatus">';
+for(var i=0;i<FINISH_STATUS.length;i++){h+='<option>'+FINISH_STATUS[i]+'</option>';}
+h+='</select><label>Notes:</label><input id="_fNotes" placeholder="Any notes"><button class="btn" onclick="saveFinish()">Save Finish</button><button class="btn btn-secondary" onclick="go(\'finishes\')">Cancel</button>';
+document.getElementById("content").innerHTML=h;loadFinishItems();
+}
+
+function loadFinishItems(){var cat=document.getElementById("_fCat").value;var items=FINISH_TYPES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_fItem").innerHTML=h;}
+
+function saveFinish(){
+if(!D.finishes)D.finishes=[];
+D.finishes.push({id:uid(),date:document.getElementById("_entryDate").value,room:document.getElementById("_fRoom").value,category:document.getElementById("_fCat").value,spec:document.getElementById("_fItem").value,status:document.getElementById("_fStatus").value,notes:document.getElementById("_fNotes").value,timestamp:Date.now()});
+save();toast("Finish saved!");go("finishes");
+}
+
+function deleteRoom(room){
+if(confirm("Remove all finishes for "+room+"?")){
+D.finishes=(D.finishes||[]).filter(function(f){return f.room!==room;});
+save();go("finishes");
+}
+}
 RENDER["report"]=function(){
 reportDate=globalDate;
 var dt=(D.diaries||[]).filter(function(e){return e.date===reportDate;});
@@ -594,6 +654,22 @@ function saveReport(){if(!D.savedReports)D.savedReports=[];D.savedReports.push({
 function printReport(){var c=document.getElementById("rp").innerHTML;var w=window.open("","_blank","width=900,height=700");w.document.write('<!DOCTYPE html><html><head><title>Daily Site Report</title><style>body{font-family:monospace;font-size:10px;line-height:1.4;padding:15px;color:#000}table{border-collapse:collapse;width:100%}th,td{border:1px solid #000;padding:3px}hr{border:1px solid #000}h3{text-align:center;font-size:13px}h4{font-size:11px;margin:6px 0}@media print{body{margin:0;padding:8px}}</style></head><body>'+c+'</body></html>');w.document.close();setTimeout(function(){w.print();},500);}
 function copyReport(){var c=document.getElementById("rp").innerText;navigator.clipboard.writeText(c).then(function(){toast("Report copied!");});}
 // ============ SETTINGS ============
+// ============ KENYAN WEATHER SERVICE ============
+function getKenyanWeather(){
+var m=new Date(globalDate).getMonth();
+if(m>=2&&m<=4)return {morning:"Rainy",afternoon:"Rainy",temp:"18-26C",ground:"Muddy"};
+if(m>=9&&m<=11)return {morning:"Rainy",afternoon:"Cloudy",temp:"19-27C",ground:"Muddy"};
+if(m>=5&&m<=8)return {morning:"Cloudy",afternoon:"Sunny",temp:"15-24C",ground:"Dry"};
+return {morning:"Sunny",afternoon:"Sunny",temp:"20-30C",ground:"Dry"};
+}
+function autoWeather(){
+var w=getKenyanWeather();
+if(!D.weatherMorning||D.weatherMorning==="")D.weatherMorning=w.morning;
+if(!D.weatherAfternoon||D.weatherAfternoon==="")D.weatherAfternoon=w.afternoon;
+if(!D.tempNotes||D.tempNotes==="")D.tempNotes=w.temp;
+if(!D.groundCondition||D.groundCondition==="")D.groundCondition=w.ground;
+save();
+}
 RENDER["project"]=function(){
 return '<h2>Project Settings</h2>'+
 '<label>Project Name:</label><input id="projectName">'+
@@ -601,8 +677,8 @@ return '<h2>Project Settings</h2>'+
 '<div class="row"><div><label>Site Location:</label><input id="siteLocation"></div><div><label>County:</label><input id="county"></div></div>'+
 '<label>Main Contractor:</label><input id="mainContractor">'+
 '<h4 style="margin-top:15px">Site Conditions</h4>'+
-'<div class="row"><div><label>Weather AM:</label><select id="weatherMorning"><option value="">-</option><option>Sunny</option><option>Rainy</option><option>Cloudy</option><option>Windy</option></select></div><div><label>Weather PM:</label><select id="weatherAfternoon"><option value="">-</option><option>Sunny</option><option>Rainy</option><option>Cloudy</option><option>Windy</option></select></div></div>'+
-'<div class="row"><div><label>Ground:</label><select id="groundCondition"><option value="">-</option><option>Dry</option><option>Muddy</option><option>Flooded</option></select></div><div><label>Temp/Notes:</label><input id="tempNotes"></div></div>'+
+'<div class="row"><div><label>Weather AM:</label><select id="weatherMorning"><option value="">Auto (Kenyan seasons)</option><option>Sunny</option><option>Rainy</option><option>Cloudy</option><option>Windy</option></select></div><div><label>Weather PM:</label><select id="weatherAfternoon"><option value="">Auto (Kenyan seasons)</option><option>Sunny</option><option>Rainy</option><option>Cloudy</option><option>Windy</option></select></div></div>'+
+'<div class="row"><div><label>Ground:</label><select id="groundCondition"><option value="">Auto</option><option>Dry</option><option>Muddy</option><option>Flooded</option></select></div><div><label>Temp/Notes:</label><input id="tempNotes"></div></div>'+
 '<h4 style="margin-top:15px">Sign-Off Details</h4>'+
 '<div class="row"><div><label>COW Name:</label><input id="cowName"></div><div><label>Date/Time:</label><input id="cowDateTime"></div></div>'+
 '<div class="row"><div><label>Contractor Rep:</label><input id="contractorRepName"></div><div><label>Date/Time:</label><input id="contractorRepDateTime"></div></div>'+
@@ -610,7 +686,7 @@ return '<h2>Project Settings</h2>'+
 };
 
 // ============ INIT ============
-nav();go("dashboard");
+autoWeather();nav();go("dashboard");
 </script>
 </body>
 </html>
