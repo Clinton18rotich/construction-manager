@@ -1142,7 +1142,43 @@ var rn="COW/"+(D.savedReports?D.savedReports.length+1:1)+"/"+reportDate.substrin
 var totalWorkers=0;for(var i=0;i<lab.length;i++){totalWorkers+=parseInt(lab[i].mainCount||0)+parseInt(lab[i].subCount||0);}
 
 // Work progress
-var workText="";for(var i=0;i<dt.length;i++){workText+=dt[i].activity+" - "+dt[i].location+"\n"+dt[i].obs+(dt[i].remarks?" ("+dt[i].remarks+")":"")+"\n\n";}if(!workText)workText="No diary entries.\n";
+var workText="";
+// Diary entries
+for(var i=0;i<dt.length;i++){workText+=dt[i].activity+" - "+dt[i].location+"\n   "+dt[i].obs+(dt[i].remarks?" ("+dt[i].remarks+")":"")+"\n";}
+// Concrete pours
+var concPours=(D.concretePours||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<concPours.length;i++){var p=concPours[i];workText+="\nConcrete: "+p.category+" - "+p.element+"\n   Grade: "+p.grade+" | Volume: "+p.volume+"m3 | Cement: "+p.cementBags+" bags\n";}
+// Formwork
+var fw=(D.formwork||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<fw.length;i++){workText+="   Formwork: "+fw[i].name+" ("+fw[i].location+", Qty: "+fw[i].qty+", Status: "+fw[i].status+")\n";}
+// BBS
+var bbs=(D.bbs||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<bbs.length;i++){workText+="   BBS: "+bbs[i].ref+": "+bbs[i].name+" (No: "+bbs[i].qty+", Len: "+bbs[i].length+"m)\n";}
+// Underground
+var ug=(D.underground||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<ug.length;i++){workText+="   Underground: "+ug[i].name+" at "+ug[i].location+"\n";}
+// Roof
+var roof=(D.roof||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<roof.length;i++){workText+="   Roof: "+roof[i].name+" at "+roof[i].location+"\n";}
+// Finishes
+var fin=(D.finishes||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<fin.length;i++){workText+="   Finishes: "+fin[i].room+" - "+fin[i].category+": "+fin[i].spec+" ("+fin[i].status+")\n";}
+// Fixtures
+var fix=(D.fixtures||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<fix.length;i++){workText+="   Fixtures: "+fix[i].name+" at "+fix[i].location+"\n";}
+// Openings
+var op=(D.openings||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<op.length;i++){workText+="   Openings: "+op[i].ref+": "+op[i].type+" at "+op[i].location+"\n";}
+// Services
+var svc=(D.services||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<svc.length;i++){workText+="   Services: "+svc[i].name+" at "+svc[i].location+"\n";}
+// Landscape
+var land=(D.landscape||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<land.length;i++){workText+="   Landscape: "+land[i].name+" at "+land[i].location+"\n";}
+// Transport
+var trans=(D.transport||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<trans.length;i++){workText+="   Transport: "+trans[i].name+" at "+trans[i].location+"\n";}
+if(!workText)workText="No activity recorded for this date.\n";
 
 // Labour table
 var labourTable="";var trades=["Site Agent","Masons","Carpenters","Steel Fixers","Plumbers","Painters","General","Other"];for(var t=0;t<trades.length;t++){var m=0,s=0;for(var l=0;l<lab.length;l++){if(lab[l].trade===trades[t]){m+=parseInt(lab[l].mainCount||0);s+=parseInt(lab[l].subCount||0);}}if(m>0||s>0)labourTable+="<tr><td>"+trades[t]+"</td><td>"+m+"</td><td>"+s+"</td></tr>";}if(!labourTable)labourTable='<tr><td colspan="3">No labour recorded</td></tr>';
