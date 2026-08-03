@@ -486,22 +486,39 @@ save();toast("SWO saved!");go("stopwork");
 // ============ MATERIAL REJECTIONS ============
 var MRN_CATEGORIES={"Cement & Binders":["Expired/old stock","Lumpy/hardened cement","Wrong type delivered","Damaged bags - water ingress"],"Reinforcement Steel":["Wrong diameter/grade","Excessive rust/corrosion","Bent/buckled bars","Wrong length delivered","No mill certificate"],"Blocks & Bricks":["Cracked/broken blocks","Wrong size/type","Under-strength","Uneven edges/poor finish"],"Aggregates":["Wrong size/grading","Contaminated with silt","Contains organic matter","Wrong source not approved"],"Timber":["Not treated as specified","Wrong species/grade","Excessive knots/warping","Moisture content too high"],"Plumbing":["Wrong pipe material/size","Damaged/cracked pipes","No test certificates","Counterfeit branded items"],"Electrical":["Wrong cable size","Not to KEBS standard","Damaged insulation","No test certificate"],"Finishes":["Wrong colour/shade","Damaged/opened tins","Expired paint","Wrong tile batch","Chipped/broken tiles"],"Roofing":["Wrong gauge/thickness","Pre-rusted sheets","Wrong profile/colour","Damaged during transport"],"General":["Not to approved sample","No delivery note","No test certificate","Quantity short delivered"]};
 RENDER["rejections"]=function(){
-var list="";var rej=(D.materialRejections||[]).filter(function(e){return e.date===globalDate;});
-if(rej.length===0){list='<p style="color:#666">No material rejections.</p>';}
-else{for(var i=0;i<rej.length;i++){var r=rej[i];list+='<div class="card"><div style="display:flex;justify-content:space-between"><h4>'+r.material+'</h4><button class="btn btn-red btn-sm" onclick="delItem(\'materialRejections\',\''+r.id+'\');go(\'rejections\')">X</button></div><p>Qty: '+r.qty+' | Supplier: '+r.supplier+'</p><p style="font-size:12px;color:#ff3b30">'+r.reason+'</p></div>';}}
-return '<h2>Material Rejections (MRN)</h2><p style="color:#aaa;font-size:12px">Date: '+globalDate+'</p>'+list+'<button class="btn btn-blue" onclick="showMRNForm()">+ New Rejection</button>';
+var h='<h2>Material Rejection Notice (MRN)</h2><p style="color:#aaa;font-size:12px">Kenya Ministry of Public Works Format</p>';
+h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showMRNForm()">+ New MRN</button> <button class="btn btn-sm btn-green" onclick="printMRN()">📄 MRN Report</button> <button class="btn btn-sm" style="background:#25D366;color:#fff" onclick="shareMRNWA()">📱 WhatsApp</button> <button class="btn btn-sm" style="background:#EA4335;color:#fff" onclick="shareMRNEM()">📧 Email</button></div>';
+var rej=(D.materialRejections||[]);
+if(rej.length===0){h+='<p style="color:#666">No material rejections recorded.</p>';}
+else{
+h+='<table style="font-size:10px"><tr><th>MRN No</th><th>Date</th><th>Material</th><th>Supplier</th><th>Reason</th><th>Action</th><th></th></tr>';
+for(var i=0;i<rej.length;i++){var r=rej[i];h+='<tr><td>'+(r.mrnNo||"N/A")+'</td><td>'+r.date+'</td><td>'+r.material+'</td><td>'+r.supplier+'</td><td style="color:#ff3b30;font-size:10px">'+r.reason+'</td><td>'+r.action+'</td><td><button class="btn btn-red btn-sm" style="padding:2px 6px;font-size:10px" onclick="delItem(\'materialRejections\',\''+r.id+'\');go(\'rejections\')">X</button></td></tr>';}
+h+='</table>';
+}
+return h;
 };
 function showMRNForm(){
 var cats="";var ck=Object.keys(MRN_CATEGORIES);for(var i=0;i<ck.length;i++){cats+='<option>'+ck[i]+'</option>';}
-var h='<h3>New Material Rejection</h3><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'" max="'+today()+'"><label>Category:</label><select id="_mrnCat" onchange="loadMRNItems()">'+cats+'</select><label>Specific Issue:</label><select id="_mrnItem"></select><label>Material:</label><input id="_mrnMat"><div class="row"><div><label>Quantity:</label><input id="_mrnQty"></div><div><label>Supplier:</label><input id="_mrnSupp"></div></div><label>Action:</label><select id="_mrnAction"><option>Remove from site and replace</option><option>Quarantine for inspection</option><option>Return to supplier</option><option>Reject and dispose</option></select><button class="btn" onclick="saveMRN()">Save Rejection</button><button class="btn btn-secondary" onclick="go(\'rejections\')">Cancel</button>';
+var mrnNo="MRN-"+(D.materialRejections?D.materialRejections.length+1:1)+"/"+globalDate.substring(0,4);
+var h='<h3>New Material Rejection Notice</h3>';
+h+='<div class="card"><h4>Project Details</h4>';
+h+='<label>MRN No:</label><input id="_mrnNo" value="'+mrnNo+'"><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'"><label>Project Name:</label><input id="_mrnProject" value="'+(D.projectName||"")+'"><div class="row"><div><label>Contract No:</label><input id="_mrnContract" value="'+(D.contractNo||"")+'"></div><div><label>WP Item:</label><input id="_mrnWP" value="'+(D.wpItemNo||"")+'"></div></div><label>Site Location:</label><input id="_mrnSite" value="'+(D.siteLocation||"")+'"><label>Contractor:</label><input id="_mrnContractor" value="'+(D.mainContractor||"")+'"></div>';
+h+='<div class="card"><h4>Material Details</h4>';
+h+='<label>Material Description:</label><input id="_mrnMat" placeholder="Describe the rejected material"><div class="row"><div><label>Quantity Rejected:</label><input id="_mrnQty"></div><div><label>Delivery Note No:</label><input id="_mrnDN"></div></div><label>Supplier/Manufacturer:</label><input id="_mrnSupp"><label>Date Delivered:</label><input type="date" id="_mrnDelDate" value="'+globalDate+'"></div>';
+h+='<div class="card"><h4>Reason for Rejection</h4>';
+h+='<label>Category:</label><select id="_mrnCat" onchange="loadMRNItems()">'+cats+'</select><label>Specific Non-Conformance:</label><select id="_mrnItem"></select><label>Detailed Reason (refer to specification clause):</label><textarea id="_mrnReason" placeholder="State which specification clause is violated, test results if applicable"></textarea></div>';
+h+='<div class="card"><h4>Action Required</h4>';
+h+='<label>Action:</label><select id="_mrnAction"><option>Remove from site immediately</option><option>Remove and replace within 7 days</option><option>Remove and replace within 14 days</option><option>Quarantine pending further tests</option><option>Return to supplier for credit</option><option>Reject and dispose off-site</option></select><label>Deadline for Compliance:</label><input type="date" id="_mrnDeadline" value="'+globalDate+'"><label>Additional Instructions:</label><textarea id="_mrnInstructions"></textarea></div>';
+h+='<div class="card"><h4>Sign-Off</h4>';
+h+='<label>Issued By (Clerk of Works/Engineer):</label><input id="_mrnIssuedBy" value="'+(D.cowName||"")+'"><label>Date Issued:</label><input type="date" id="_mrnIssuedDate" value="'+globalDate+'"><label>Acknowledged By (Contractor Rep):</label><input id="_mrnAckBy"><label>Date Acknowledged:</label><input type="date" id="_mrnAckDate" value="'+globalDate+'"></div>';
+h+='<button class="btn" onclick="saveMRN()">Save MRN</button><button class="btn btn-secondary" onclick="go(\'rejections\')">Cancel</button>';
 document.getElementById("content").innerHTML=h;loadMRNItems();
 }
 function loadMRNItems(){var cat=document.getElementById("_mrnCat").value;var items=MRN_CATEGORIES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_mrnItem").innerHTML=h;}
-function saveMRN(){
-if(!D.materialRejections)D.materialRejections=[];
-D.materialRejections.push({id:uid(),date:document.getElementById("_entryDate").value,category:document.getElementById("_mrnCat").value,reason:document.getElementById("_mrnItem").value,material:document.getElementById("_mrnMat").value,qty:document.getElementById("_mrnQty").value,supplier:document.getElementById("_mrnSupp").value,action:document.getElementById("_mrnAction").value,timestamp:Date.now()});
-save();toast("MRN saved!");go("rejections");
-}
+function saveMRN(){if(!D.materialRejections)D.materialRejections=[];D.materialRejections.push({id:uid(),mrnNo:document.getElementById("_mrnNo").value,date:document.getElementById("_entryDate").value,project:document.getElementById("_mrnProject").value,contract:document.getElementById("_mrnContract").value,wpItem:document.getElementById("_mrnWP").value,site:document.getElementById("_mrnSite").value,contractor:document.getElementById("_mrnContractor").value,material:document.getElementById("_mrnMat").value,qty:document.getElementById("_mrnQty").value,deliveryNote:document.getElementById("_mrnDN").value,supplier:document.getElementById("_mrnSupp").value,dateDelivered:document.getElementById("_mrnDelDate").value,category:document.getElementById("_mrnCat").value,reason:document.getElementById("_mrnReason").value||document.getElementById("_mrnItem").value,action:document.getElementById("_mrnAction").value,deadline:document.getElementById("_mrnDeadline").value,instructions:document.getElementById("_mrnInstructions").value,issuedBy:document.getElementById("_mrnIssuedBy").value,issuedDate:document.getElementById("_mrnIssuedDate").value,acknowledgedBy:document.getElementById("_mrnAckBy").value,ackDate:document.getElementById("_mrnAckDate").value,timestamp:Date.now()});save();toast("MRN saved!");go("rejections");}
+function printMRN(){var rej=D.materialRejections||[];var w=window.open("","_blank","width=900,height=700");var htm='<!DOCTYPE html><html><head><title>MRN Report</title><style>body{font-family:monospace;font-size:10px;padding:15px;color:#000}table{border-collapse:collapse;width:100%;margin:8px 0}th,td{border:1px solid #000;padding:3px}th{background:#ddd}h3,h4{text-align:center;margin:5px 0}@media print{body{margin:0;padding:8px}}</style></head><body>';for(var i=0;i<rej.length;i++){var r=rej[i];htm+='<h3>MINISTRY OF PUBLIC WORKS - REPUBLIC OF KENYA</h3><h3>MATERIAL REJECTION NOTICE (MRN)</h3><p><b>MRN No:</b> '+(r.mrnNo||"N/A")+' | <b>Date:</b> '+r.date+'</p><p><b>Project:</b> '+(r.project||"")+' | <b>Contract:</b> '+(r.contract||"")+' | <b>WP:</b> '+(r.wpItem||"")+'</p><p><b>Site:</b> '+(r.site||"")+' | <b>Contractor:</b> '+(r.contractor||"")+'</p><hr><h4>MATERIAL DETAILS</h4><table><tr><td><b>Material:</b></td><td>'+r.material+'</td><td><b>Quantity:</b></td><td>'+r.qty+'</td></tr><tr><td><b>Supplier:</b></td><td>'+r.supplier+'</td><td><b>Delivery Note:</b></td><td>'+r.deliveryNote+'</td></tr></table><hr><h4>REASON FOR REJECTION</h4><p><b>Category:</b> '+r.category+'</p><p>'+r.reason+'</p><hr><h4>ACTION REQUIRED</h4><p><b>Action:</b> '+r.action+' | <b>Deadline:</b> '+(r.deadline||"Immediate")+'</p><p><b>Instructions:</b> '+(r.instructions||"")+'</p><hr><h4>SIGN-OFF</h4><p><b>Issued By:</b> '+(r.issuedBy||"")+' | <b>Date:</b> '+(r.issuedDate||"")+'</p><p><b>Acknowledged By:</b> '+(r.acknowledgedBy||"")+' | <b>Date:</b> '+(r.ackDate||"")+'</p><br>';}htm+='</body></html>';w.document.write(htm);w.document.close();setTimeout(function(){w.print();},500);}
+function shareMRNWA(){var rej=D.materialRejections||[];var t="*MINISTRY OF PUBLIC WORKS - MRN REPORT*";for(var i=0;i<rej.length;i++){var r=rej[i];t+="\\n\\n*MRN:* "+(r.mrnNo||"N/A")+"\\n*Material:* "+r.material+"\\n*Reason:* "+r.reason+"\\n*Action:* "+r.action;}window.open("https://wa.me/?text="+encodeURIComponent(t),"_blank");}
+function shareMRNEM(){var rej=D.materialRejections||[];var b="MINISTRY OF PUBLIC WORKS - MRN REPORT\\n\\n";for(var i=0;i<rej.length;i++){var r=rej[i];b+="MRN: "+(r.mrnNo||"N/A")+" | Material: "+r.material+" | Action: "+r.action+"\\n";}window.open("mailto:?subject=MRN Report - "+globalDate+"&body="+encodeURIComponent(b),"_blank");}
 // ============ SCHEDULE OF FINISHES ============
 var FINISH_TYPES={
 "Floor Finishes":["Screed only","Ceramic tiles 400x400","Ceramic tiles 500x500","Ceramic tiles 600x600","Porcelain tiles","Terrazzo","Epoxy floor","PVC tiles","Wood parquet","Carpet","Polished concrete","Granite/Marble"],
@@ -1108,7 +1125,81 @@ var rn="COW/"+(D.savedReports?D.savedReports.length+1:1)+"/"+reportDate.substrin
 var totalWorkers=0;for(var i=0;i<lab.length;i++){totalWorkers+=parseInt(lab[i].mainCount||0)+parseInt(lab[i].subCount||0);}
 
 // Work progress
-var workText="";for(var i=0;i<dt.length;i++){workText+=dt[i].activity+" - "+dt[i].location+"\n"+dt[i].obs+(dt[i].remarks?" ("+dt[i].remarks+")":"")+"\n\n";}if(!workText)workText="No diary entries.\n";
+var workText="";
+// Diary entries
+for(var i=0;i<dt.length;i++){workText+=dt[i].activity+" - "+dt[i].location+"\n   "+dt[i].obs+(dt[i].remarks?" ("+dt[i].remarks+")":"")+"\n";}
+// Concrete pours
+var concPours=(D.concretePours||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<concPours.length;i++){var p=concPours[i];workText+="\nConcrete: "+p.category+" - "+p.element+"\n   Grade: "+p.grade+" | Volume: "+p.volume+"m3 | Cement: "+p.cementBags+" bags | Status: "+p.status+"\n";}
+// Formwork - detailed items
+var fw=(D.formwork||[]).filter(function(e){return e.date===reportDate;});
+if(fw.length>0){workText+="\nFORMWORK & SCAFFOLDING:\n";for(var i=0;i<fw.length;i++){var f=fw[i];workText+="   - "+f.name+" ("+f.location+", Qty: "+f.qty+", Status: "+f.status+")\n";}}
+// BBS - detailed bars
+var bbs=(D.bbs||[]).filter(function(e){return e.date===reportDate;});
+if(bbs.length>0){workText+="\nBAR BENDING SCHEDULE:\n";for(var i=0;i<bbs.length;i++){var b=bbs[i];workText+="   - "+b.ref+": "+b.name+" (No: "+b.qty+", Len: "+b.length+"m, Status: "+b.status+")\n";}}
+// Underground
+var ug=(D.underground||[]).filter(function(e){return e.date===reportDate;});
+if(ug.length>0){workText+="\nUNDERGROUND STRUCTURES:\n";for(var i=0;i<ug.length;i++){var u=ug[i];workText+="   - "+u.name+" at "+u.location+" (Qty: "+u.qty+", Status: "+u.status+")\n";}}
+// Roof
+var roof=(D.roof||[]).filter(function(e){return e.date===reportDate;});
+if(roof.length>0){workText+="\nROOF WORKS:\n";for(var i=0;i<roof.length;i++){var r=roof[i];workText+="   - "+r.name+" at "+r.location+" (Qty: "+r.qty+" "+r.unit+", Status: "+r.status+")\n";}}
+// Landscape
+var land=(D.landscape||[]).filter(function(e){return e.date===reportDate;});
+if(land.length>0){workText+="\nLANDSCAPING:\n";for(var i=0;i<land.length;i++){var l=land[i];workText+="   - "+l.name+" at "+l.location+" (Qty: "+l.qty+" "+l.unit+", Status: "+l.status+")\n";}}
+// Transport
+var trans=(D.transport||[]).filter(function(e){return e.date===reportDate;});
+if(trans.length>0){workText+="\nTRANSPORTATION:\n";for(var i=0;i<trans.length;i++){var t=trans[i];workText+="   - "+t.name+" at "+t.location+" (Qty: "+t.qty+" "+t.unit+", Status: "+t.status+")\n";}}
+// Finishes
+var fin=(D.finishes||[]).filter(function(e){return e.date===reportDate;});
+if(fin.length>0){workText+="\nFINISHES:\n";for(var i=0;i<fin.length;i++){var f=fin[i];workText+="   - "+f.room+": "+f.category+" - "+f.spec+" (Status: "+f.status+")\n";}}
+// Fixtures
+var fix=(D.fixtures||[]).filter(function(e){return e.date===reportDate;});
+if(fix.length>0){workText+="\nFIXTURES & FITTINGS:\n";for(var i=0;i<fix.length;i++){var f=fix[i];workText+="   - "+f.name+" at "+f.location+" (Qty: "+f.qty+", Status: "+f.status+")\n";}}
+// Openings
+var op=(D.openings||[]).filter(function(e){return e.date===reportDate;});
+if(op.length>0){workText+="\nOPENINGS (Doors/Windows):\n";for(var i=0;i<op.length;i++){var o=op[i];workText+="   - "+o.ref+": "+o.type+" at "+o.location+" (Size: "+o.size+", Qty: "+o.qty+", Status: "+o.status+")\n";}}
+// Services
+var svc=(D.services||[]).filter(function(e){return e.date===reportDate;});
+if(svc.length>0){workText+="\nBUILDING SERVICES:\n";for(var i=0;i<svc.length;i++){var s=svc[i];workText+="   - "+s.name+" at "+s.location+" (Status: "+s.status+", Test: "+(s.testResult||"N/A")+")\n";}}
+if(!workText)workText="No activity recorded for this date.\n";
+// Diary entries
+for(var i=0;i<dt.length;i++){workText+=dt[i].activity+" - "+dt[i].location+"\n"+dt[i].obs+(dt[i].remarks?" ("+dt[i].remarks+")":"")+"\n";}
+// Concrete pours
+var concPours=(D.concretePours||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<concPours.length;i++){var p=concPours[i];workText+="Concrete Pour: "+p.element+" - "+p.grade+" ("+p.volume+"m3, "+p.cementBags+" bags)\n";}
+// Formwork
+var fw=(D.formwork||[]).filter(function(e){return e.date===reportDate;});
+var fwCats={};for(var i=0;i<fw.length;i++){var f=fw[i];if(!fwCats[f.category])fwCats[f.category]=[];fwCats[f.category].push(f);}
+var fk=Object.keys(fwCats);for(var i=0;i<fk.length;i++){workText+=fk[i]+": "+fwCats[fk[i]].length+" items\n";}
+// BBS
+var bbs=(D.bbs||[]).filter(function(e){return e.date===reportDate;});
+var bbsCats={};for(var i=0;i<bbs.length;i++){var b=bbs[i];if(!bbsCats[b.category])bbsCats[b.category]=[];bbsCats[b.category].push(b);}
+var bk=Object.keys(bbsCats);for(var i=0;i<bk.length;i++){workText+=bk[i]+": "+bbsCats[bk[i]].length+" bars\n";}
+// Underground
+var ug=(D.underground||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<ug.length;i++){workText+="Underground: "+ug[i].name+" - "+ug[i].location+" ("+ug[i].status+")\n";}
+// Roof
+var roof=(D.roof||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<roof.length;i++){workText+="Roof: "+roof[i].name+" - "+roof[i].location+" ("+roof[i].status+")\n";}
+// Landscape
+var land=(D.landscape||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<land.length;i++){workText+="Landscape: "+land[i].name+" - "+land[i].location+" ("+land[i].status+")\n";}
+// Transport
+var trans=(D.transport||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<trans.length;i++){workText+="Transport: "+trans[i].name+" - "+trans[i].location+" ("+trans[i].status+")\n";}
+// Finishes
+var fin=(D.finishes||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<fin.length;i++){workText+="Finishes: "+fin[i].room+" - "+fin[i].category+": "+fin[i].spec+" ("+fin[i].status+")\n";}
+// Fixtures
+var fix=(D.fixtures||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<fix.length;i++){workText+="Fixtures: "+fix[i].name+" - "+fix[i].location+" ("+fix[i].status+")\n";}
+// Openings
+var op=(D.openings||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<op.length;i++){workText+="Openings: "+op[i].ref+" - "+op[i].type+" at "+op[i].location+" ("+op[i].status+")\n";}
+// Services
+var svc=(D.services||[]).filter(function(e){return e.date===reportDate;});
+for(var i=0;i<svc.length;i++){workText+="Services: "+svc[i].name+" - "+svc[i].location+" ("+svc[i].status+")\n";}
+if(!workText)workText="No activity recorded for this date.\n";
 
 // Labour table
 var labourTable="";var trades=["Site Agent","Masons","Carpenters","Steel Fixers","Plumbers","Painters","General","Other"];for(var t=0;t<trades.length;t++){var m=0,s=0;for(var l=0;l<lab.length;l++){if(lab[l].trade===trades[t]){m+=parseInt(lab[l].mainCount||0);s+=parseInt(lab[l].subCount||0);}}if(m>0||s>0)labourTable+="<tr><td>"+trades[t]+"</td><td>"+m+"</td><td>"+s+"</td></tr>";}if(!labourTable)labourTable='<tr><td colspan="3">No labour recorded</td></tr>';
