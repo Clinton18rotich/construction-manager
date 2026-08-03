@@ -1138,7 +1138,7 @@ var lab=(D.labour||[]).filter(function(e){return e.date===reportDate;});
 var plant=D.plant||[];
 var meets=(D.meetings||[]).filter(function(e){return e.date===reportDate;});
 var isToday=reportDate===today();
-var rn="COW/"+(D.savedReports?D.savedReports.length+1:1)+"/"+reportDate.substring(0,4);
+var todayReports=D.savedReports?D.savedReports.filter(function(e){return e.date===reportDate;}).length:0;var rn="COW/"+(todayReports+1)+"/"+reportDate.substring(0,4);
 var totalWorkers=0;for(var i=0;i<lab.length;i++){totalWorkers+=parseInt(lab[i].mainCount||0)+parseInt(lab[i].subCount||0);}
 
 // Work progress
