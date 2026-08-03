@@ -64,7 +64,7 @@ for(var j=0;j<D.stock.length;j++){if(D.stock[j].name===l.name&&D.stock[j].unit==
 if(!f){D.stock.push({id:uid(),name:l.name,category:l.category||"",qty:l.type==="delivery"?parseFloat(l.qty):-parseFloat(l.qty),unit:l.unit||"",minStock:10,date:l.date});}}
 save();}
 rebuildStock();
-function getDefault(){return {reportNo:"",date:new Date().toISOString().split("T")[0],projectName:"",wpItemNo:"",contractNo:"",siteLocation:"",county:"",mainContractor:"",weatherMorning:"",weatherAfternoon:"",groundCondition:"",tempNotes:"",diaries:[],inspections:[],ncrs:[],instructions:[],materials:[],materialLogs:[],stock:[],concreteCubes:[],concretePours:[],drawings:[],rfis:[],stopWorkOrders:[],materialRejections:[],labour:[],plant:[],meetings:[],delays:[],cowName:"",cowDateTime:"",contractorRepName:"",contractorRepDateTime:""};}
+function getDefault(){return {reportNo:"",date:new Date().toISOString().split("T")[0],projectName:"",wpItemNo:"",contractNo:"",siteLocation:"",county:"",mainContractor:"",weatherMorning:"",weatherAfternoon:"",groundCondition:"",tempNotes:"",diaries:[],inspections:[],ncrs:[],instructions:[],materials:[],materialLogs:[],stock:[],concreteCubes:[],concretePours:[],drawings:[],rfis:[],stopWorkOrders:[],mirs:[],materialRejections:[],labour:[],plant:[],meetings:[],delays:[],cowName:"",cowDateTime:"",contractorRepName:"",contractorRepDateTime:""};}
 function save(){localStorage.setItem(K,JSON.stringify(D));}
 function toast(m){var t=document.getElementById("toast");t.textContent=m;t.style.display="block";setTimeout(function(){t.style.display="none";},2000);}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).substr(2,5);}
@@ -142,7 +142,7 @@ var MEETING_AGENDA=["Confirmation of Previous Minutes","Progress Review","Qualit
 var CONCRETE_MIXES={"C15/20 Blinding":{"ratio":"1:3:6","cement":"250kg (5 bags)","sand":"0.45m3","ballast":"0.9m3","water":"125L","use":"Blinding, lean concrete"},"C20/25 Light Duty":{"ratio":"1:2.5:5","cement":"300kg (6 bags)","sand":"0.44m3","ballast":"0.88m3","water":"150L","use":"Light duty floors"},"C25/30 General RC":{"ratio":"1:2:4","cement":"350kg (7 bags)","sand":"0.42m3","ballast":"0.84m3","water":"175L","use":"Slabs, beams, columns"},"C30/37 Heavy Duty":{"ratio":"1:2:3","cement":"400kg (8 bags)","sand":"0.40m3","ballast":"0.80m3","water":"200L","use":"Heavy duty, water retaining"},"C35/45 Precast":{"ratio":"1:1.5:3","cement":"450kg (9 bags)","sand":"0.38m3","ballast":"0.76m3","water":"200L","use":"Precast elements"},"C40/50 High Strength":{"ratio":"1:1.5:2.5","cement":"500kg (10 bags)","sand":"0.36m3","ballast":"0.72m3","water":"200L","use":"Bridge works"}};
 
 // ============ NAVIGATION ============
-var NAV=[{id:"dashboard",label:"Home"},{id:"diary",label:"Diary"},{id:"inspections",label:"Inspections"},{id:"ncr",label:"NCRs"},{id:"instructions",label:"S.I."},{id:"materials",label:"Materials"},{id:"stock",label:"Stock"},{id:"cubes",label:"Cubes"},{id:"concrete",label:"Concrete"},{id:"labour",label:"Labour"},{id:"plant",label:"Plant"},{id:"formwork",label:"Formwork"},{id:"bbs",label:"BBS"},{id:"underground",label:"Underground"},{id:"roof",label:"Roof"},{id:"landscape",label:"Landscape"},{id:"transport",label:"Transport"},{id:"finishes",label:"Finishes"},{id:"fixtures",label:"Fixtures"},{id:"openings",label:"Openings"},{id:"services",label:"Services"},{id:"meetings",label:"Meetings"},{id:"delays",label:"Delays"},{id:"drawings",label:"Drawings"},{id:"rfi",label:"RFIs"},{id:"stopwork",label:"Stop Work"},{id:"rejections",label:"Rejections"},{id:"report",label:"REPORT"},{id:"project",label:"Settings"}];
+var NAV=[{id:"dashboard",label:"Home"},{id:"diary",label:"Diary"},{id:"inspections",label:"Inspections"},{id:"ncr",label:"NCRs"},{id:"instructions",label:"S.I."},{id:"materials",label:"Materials"},{id:"stock",label:"Stock"},{id:"mir",label:"MIR"},{id:"cubes",label:"Cubes"},{id:"concrete",label:"Concrete"},{id:"labour",label:"Labour"},{id:"plant",label:"Plant"},{id:"formwork",label:"Formwork"},{id:"bbs",label:"BBS"},{id:"underground",label:"Underground"},{id:"roof",label:"Roof"},{id:"landscape",label:"Landscape"},{id:"transport",label:"Transport"},{id:"finishes",label:"Finishes"},{id:"fixtures",label:"Fixtures"},{id:"openings",label:"Openings"},{id:"services",label:"Services"},{id:"meetings",label:"Meetings"},{id:"delays",label:"Delays"},{id:"drawings",label:"Drawings"},{id:"rfi",label:"RFIs"},{id:"stopwork",label:"Stop Work"},{id:"rejections",label:"MRN"},{id:"report",label:"REPORT"},{id:"project",label:"Settings"}];
 var current="dashboard";
 function nav(){
 var h="";for(var i=0;i<NAV.length;i++){h+='<button class="'+(NAV[i].id===current?"active":"")+'" onclick="go(\''+NAV[i].id+'\')">'+NAV[i].label+'</button>';}
@@ -1033,6 +1033,47 @@ document.getElementById("content").innerHTML=h;loadTransItems();
 }
 function loadTransItems(){var cat=document.getElementById("_trCat").value;var items=TRANSPORT_CATEGORIES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_trItem").innerHTML=h;}
 function saveTrans(){if(!D.transport)D.transport=[];D.transport.push({id:uid(),date:document.getElementById("_entryDate").value,category:document.getElementById("_trCat").value,name:document.getElementById("_trItem").value,location:document.getElementById("_trLoc").value,qty:document.getElementById("_trQty").value,unit:document.getElementById("_trUnit").value,status:document.getElementById("_trStatus").value,notes:document.getElementById("_trNotes").value,timestamp:Date.now()});save();toast("Item saved!");go("transport");}
+// ============ MATERIAL INSPECTION REQUEST (MIR) ============
+var MIR_CATEGORIES={
+"Structural Materials":["Reinforcement steel - check grade, size, mill certificates","Cement - check type, date of manufacture, test certificate","Concrete cubes - witness sampling and testing","Aggregates - check grading, silt content, source","Structural steel sections - check certificates, dimensions","Welding electrodes - check type, certificates","Bolts/nuts/washers - check grade, certificates"],
+"Architectural Materials":["Floor tiles - check batch, shade, size, water absorption","Wall tiles - check batch, shade, size","Ceramic/porcelain - check quality, grade","Paint - check colour, type, batch numbers","Glass - check type, thickness, tint","Timber - check species, moisture content, grade","Doors - check size, type, fire rating if applicable","Windows - check size, type, glazing"],
+"Plumbing Materials":["Pipes - check material, size, pressure rating","Fittings - check type, size, material","Sanitary ware - check model, colour, quality","Water tanks - check capacity, material, fittings","Valves - check type, size, pressure rating","Pumps - check model, capacity, head"],
+"Electrical Materials":["Cables - check size, type, voltage rating","DB boards - check size, type, IP rating","MCBs/RCDs - check rating, type, certificates","Conduits/trunking - check size, material","Lights/fixtures - check type, wattage, IP rating","Solar panels - check wattage, efficiency, certificates"],
+"Waterproofing Materials":["Membrane - check type, thickness, certification","Liquid waterproofing - check type, coverage rate","Water bar/waterstop - check type, size, material","DPM - check gauge, width, certification","Joint sealant - check type, colour, expiry date"],
+"Roofing Materials":["Iron sheets - check gauge, length, coating","Tiles - check type, colour, batch","Ridge/hip caps - check type, colour match","Underlay/sisalation - check type, thickness","Gutters - check size, material, colour","Fascia/soffit boards - check material, colour"],
+"Road/Transport Materials":["Asphalt - check mix design, temperature","Aggregate base - check grading, CBR","Concrete pavement - check grade, slump","Kerbs/pavers - check size, strength, colour","Road marking paint - check type, colour, beads","Signs - check size, retroreflectivity class"],
+"General Materials":["Sand - check grading, silt content","Ballast - check size, crushing value","Hardcore - check size, quality","Blocks/bricks - check size, strength, colour","DPC - check type, width"]
+};
+var MIR_STATUS=["Requested","Inspection scheduled","Inspected - Approved","Inspected - Rejected","Resubmitted","Closed"];
+
+RENDER["mir"]=function(){
+var h='<h2>Material Inspection Requests (MIR)</h2><p style="color:#aaa;font-size:12px">Formal requests to inspect materials before use</p>';
+h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showMIRForm()">+ New MIR</button></div>';
+var mirs=(D.mirs||[]);
+if(mirs.length===0){h+='<p style="color:#666">No material inspection requests recorded.</p>';}
+else{
+h+='<table style="font-size:11px"><tr><th>Date</th><th>Material</th><th>Category</th><th>Supplier</th><th>Status</th><th></th></tr>';
+for(var i=0;i<mirs.length;i++){var m=mirs[i];h+='<tr><td>'+m.date+'</td><td>'+m.material+'</td><td>'+m.category+'</td><td>'+m.supplier+'</td><td><span class="tag '+(m.status==="Inspected - Approved"||m.status==="Closed"?"tag-pass":m.status==="Inspected - Rejected"?"tag-fail":"tag-open")+'">'+m.status+'</span></td><td><button class="btn btn-red btn-sm" style="padding:2px 6px;font-size:10px" onclick="delItem(\'mirs\',\''+m.id+'\');go(\'mir\')">X</button></td></tr>';}
+h+='</table>';
+}
+return h;
+};
+
+function showMIRForm(){
+var cats="";var ck=Object.keys(MIR_CATEGORIES);for(var i=0;i<ck.length;i++){cats+='<option value="'+ck[i]+'">'+ck[i]+'</option>';}
+var h='<h3>New Material Inspection Request</h3><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'" max="'+today()+'"><label>Category:</label><select id="_mirCat" onchange="loadMIRItems()">'+cats+'</select><label>Material/Item:</label><select id="_mirItem"></select><label>Supplier:</label><input id="_mirSupp" placeholder="Supplier name"><label>Quantity:</label><input id="_mirQty" placeholder="e.g. 500 bags"><label>Location Stored:</label><input id="_mirLoc" placeholder="e.g. Site store, Block A"><label>Status:</label><select id="_mirStatus">';
+for(var i=0;i<MIR_STATUS.length;i++){h+='<option>'+MIR_STATUS[i]+'</option>';}
+h+='</select><label>Remarks:</label><textarea id="_mirRemarks" placeholder="Any additional notes"></textarea><button class="btn" onclick="saveMIR()">Save MIR</button><button class="btn btn-secondary" onclick="go(\'mir\')">Cancel</button>';
+document.getElementById("content").innerHTML=h;loadMIRItems();
+}
+
+function loadMIRItems(){var cat=document.getElementById("_mirCat").value;var items=MIR_CATEGORIES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_mirItem").innerHTML=h;}
+
+function saveMIR(){
+if(!D.mirs)D.mirs=[];
+D.mirs.push({id:uid(),date:document.getElementById("_entryDate").value,category:document.getElementById("_mirCat").value,material:document.getElementById("_mirItem").value,supplier:document.getElementById("_mirSupp").value,qty:document.getElementById("_mirQty").value,location:document.getElementById("_mirLoc").value,status:document.getElementById("_mirStatus").value,remarks:document.getElementById("_mirRemarks").value,timestamp:Date.now()});
+save();toast("MIR saved!");go("mir");
+}
 RENDER["report"]=function(){
 reportDate=globalDate;
 var dt=(D.diaries||[]).filter(function(e){return e.date===reportDate;});
@@ -1080,9 +1121,11 @@ var meetText="";for(var i=0;i<meets.length;i++){meetText+=meets[i].meetingNo+" a
 
 return '<div style="background:#2C2C2E;border-radius:8px;padding:8px;margin-bottom:10px"><div style="text-align:center"><label style="color:#F78166;font-size:12px">Select Report Date:</label><br><input type="date" id="_reportDatePicker" value="'+reportDate+'" max="'+today()+'" style="width:auto;display:inline-block;font-size:16px;text-align:center;background:#333;color:#fff;border:1px solid #ff9f0a;border-radius:8px;padding:8px;margin:5px 0" onchange="reportDate=this.value;go(\'report\')"><br><small style="color:#A0A0B8;font-size:10px">'+(isToday?"TODAY":rdate())+'</small></div></div>'+
 '<div style="display:flex;gap:4px;margin-bottom:10px;flex-wrap:wrap">'+
-'<button class="btn btn-sm btn-blue" onclick="printReport()">PDF</button>'+
-'<button class="btn btn-sm btn-green" onclick="copyReport()">Copy</button>'+
-'<button class="btn btn-sm" style="background:#FF9500" onclick="saveReport()">Save</button>'+
+'<button class="btn btn-sm btn-blue" onclick="printReport()">🖨️ Print/PDF</button>'+
+'<button class="btn btn-sm" style="background:#25D366;color:#fff" onclick="shareWhatsApp()">📱 WhatsApp</button>'+
+'<button class="btn btn-sm" style="background:#EA4335;color:#fff" onclick="shareEmail()">📧 Email</button>'+
+'<button class="btn btn-sm" style="background:#FF9500" onclick="saveReport()">💾 Save</button>'+
+'</div>'+
 '</div>'+
 '<div class="report-preview" id="rp" contenteditable="true" style="font-size:11px">'+
 '<h3>CLERK OF WORKS - DAILY SITE REPORT</h3>'+
@@ -1112,7 +1155,8 @@ return '<div style="background:#2C2C2E;border-radius:8px;padding:8px;margin-bott
 
 function saveReport(){if(!D.savedReports)D.savedReports=[];D.savedReports.push({id:uid(),date:reportDate,timestamp:Date.now()});save();toast("Report saved!");go("report");}
 function printReport(){var c=document.getElementById("rp").innerHTML;var w=window.open("","_blank","width=900,height=700");w.document.write('<!DOCTYPE html><html><head><title>Daily Site Report</title><style>body{font-family:monospace;font-size:10px;line-height:1.4;padding:15px;color:#000}table{border-collapse:collapse;width:100%}th,td{border:1px solid #000;padding:3px}hr{border:1px solid #000}h3{text-align:center;font-size:13px}h4{font-size:11px;margin:6px 0}@media print{body{margin:0;padding:8px}}</style></head><body>'+c+'</body></html>');w.document.close();setTimeout(function(){w.print();},500);}
-function copyReport(){var c=document.getElementById("rp").innerText;navigator.clipboard.writeText(c).then(function(){toast("Report copied!");});}
+function shareWhatsApp(){var c=document.getElementById("rp").innerText;var text="CLERK OF WORKS - DAILY SITE REPORT\n\n"+c.substring(0,500)+"...\n\nGenerated by Construction Manager";var url="https://wa.me/?text="+encodeURIComponent(text);window.open(url,"_blank");}
+function shareEmail(){var c=document.getElementById("rp").innerText;var subject="Daily Site Report - "+reportDate;var body=c.substring(0,1000)+"...\n\nGenerated by Construction Manager";var url="mailto:?subject="+encodeURIComponent(subject)+"&body="+encodeURIComponent(body);window.open(url,"_blank");}
 // ============ SETTINGS ============
 // ============ KENYAN WEATHER SERVICE ============
 function getKenyanWeather(){
