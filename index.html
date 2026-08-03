@@ -1047,33 +1047,46 @@ var MIR_CATEGORIES={
 var MIR_STATUS=["Requested","Inspection scheduled","Inspected - Approved","Inspected - Rejected","Resubmitted","Closed"];
 
 RENDER["mir"]=function(){
-var h='<h2>Material Inspection Requests (MIR)</h2><p style="color:#aaa;font-size:12px">Formal requests to inspect materials before use</p>';
-h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showMIRForm()">+ New MIR</button></div>';
+var h='<h2>Material Inspection Request (MIR)</h2><p style="color:#aaa;font-size:12px">Kenya Ministry of Public Works Format</p>';
+h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showMIRForm()">+ New MIR</button> <button class="btn btn-sm btn-green" onclick="printMIR()">MIR Report</button></div>';
 var mirs=(D.mirs||[]);
-if(mirs.length===0){h+='<p style="color:#666">No material inspection requests recorded.</p>';}
+if(mirs.length===0){h+='<p style="color:#666">No MIRs recorded.</p>';}
 else{
-h+='<table style="font-size:11px"><tr><th>Date</th><th>Material</th><th>Category</th><th>Supplier</th><th>Status</th><th></th></tr>';
-for(var i=0;i<mirs.length;i++){var m=mirs[i];h+='<tr><td>'+m.date+'</td><td>'+m.material+'</td><td>'+m.category+'</td><td>'+m.supplier+'</td><td><span class="tag '+(m.status==="Inspected - Approved"||m.status==="Closed"?"tag-pass":m.status==="Inspected - Rejected"?"tag-fail":"tag-open")+'">'+m.status+'</span></td><td><button class="btn btn-red btn-sm" style="padding:2px 6px;font-size:10px" onclick="delItem(\'mirs\',\''+m.id+'\');go(\'mir\')">X</button></td></tr>';}
+h+='<table style="font-size:10px"><tr><th>MIR No</th><th>Date</th><th>Material</th><th>Supplier</th><th>Status</th><th></th></tr>';
+for(var i=0;i<mirs.length;i++){var m=mirs[i];h+='<tr><td>'+m.mirNo+'</td><td>'+m.date+'</td><td>'+m.material+'</td><td>'+m.supplier+'</td><td><span class="tag '+(m.status==="Approved"?"tag-pass":m.status==="Rejected"?"tag-fail":"tag-open")+'">'+m.status+'</span></td><td><button class="btn btn-red btn-sm" style="padding:2px 6px;font-size:10px" onclick="delItem(\'mirs\',\''+m.id+'\');go(\'mir\')">X</button></td></tr>';}
 h+='</table>';
 }
+h+='<h4 style="margin-top:15px">Stock Status</h4>';
+var stock=D.stock||[];
+if(stock.length===0){h+='<p style="color:#666">No stock recorded.</p>';}
+else{h+='<table style="font-size:10px"><tr><th>Material</th><th>Qty</th><th>Unit</th><th>Status</th></tr>';
+for(var i=0;i<stock.length;i++){var s=stock[i];h+='<tr><td>'+s.name+'</td><td>'+s.qty+'</td><td>'+s.unit+'</td><td><span class="tag '+(s.qty<=s.minStock?"tag-fail":"tag-pass")+'">'+(s.qty<=s.minStock?"LOW":"OK")+'</span></td></tr>';}
+h+='</table>';}
 return h;
 };
-
 function showMIRForm(){
-var cats="";var ck=Object.keys(MIR_CATEGORIES);for(var i=0;i<ck.length;i++){cats+='<option value="'+ck[i]+'">'+ck[i]+'</option>';}
-var h='<h3>New Material Inspection Request</h3><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'" max="'+today()+'"><label>Category:</label><select id="_mirCat" onchange="loadMIRItems()">'+cats+'</select><label>Material/Item:</label><select id="_mirItem"></select><label>Supplier:</label><input id="_mirSupp" placeholder="Supplier name"><label>Quantity:</label><input id="_mirQty" placeholder="e.g. 500 bags"><label>Location Stored:</label><input id="_mirLoc" placeholder="e.g. Site store, Block A"><label>Status:</label><select id="_mirStatus">';
-for(var i=0;i<MIR_STATUS.length;i++){h+='<option>'+MIR_STATUS[i]+'</option>';}
-h+='</select><label>Remarks:</label><textarea id="_mirRemarks" placeholder="Any additional notes"></textarea><button class="btn" onclick="saveMIR()">Save MIR</button><button class="btn btn-secondary" onclick="go(\'mir\')">Cancel</button>';
-document.getElementById("content").innerHTML=h;loadMIRItems();
+var stock=D.stock||[];var logs=D.materialLogs||[];var deliv=logs.filter(function(e){return e.type==="delivery";});
+var matList=[];for(var i=0;i<stock.length;i++){matList.push(stock[i].name+" (Stock: "+stock[i].qty+" "+stock[i].unit+")");}
+for(var i=0;i<deliv.length;i++){var found=false;for(var j=0;j<matList.length;j++){if(matList[j].indexOf(deliv[i].name)>=0)found=true;}if(!found)matList.push(deliv[i].name+" (Delivered: "+deliv[i].qty+" "+deliv[i].unit+")");}
+if(matList.length===0)matList=["No materials in stock. Add deliveries first."];
+var mats="";for(var i=0;i<matList.length;i++){mats+='<option>'+matList[i]+'</option>';}
+var mirNo="MIR-"+(D.mirs?D.mirs.length+1:1)+"/"+(D.wpItemNo||"WP")+"/"+globalDate.substring(0,4);
+var h='<h3>New Material Inspection Request</h3>';
+h+='<div class="card"><h4>Header Information</h4>';
+h+='<label>MIR No:</label><input id="_mirNo" value="'+mirNo+'"><div class="row"><div><label>Date Submitted:</label><input type="date" id="_entryDate" value="'+globalDate+'"></div><div><label>Material Arrived:</label><input type="date" id="_mirArrived" value="'+globalDate+'"></div></div><label>Inspection Date/Time Requested:</label><input id="_mirInspDate" placeholder="e.g. 2026-08-05 10:00 AM"><label>Project Name:</label><input id="_mirProject" value="'+(D.projectName||"")+'"><div class="row"><div><label>Contract No:</label><input id="_mirContract" value="'+(D.contractNo||"")+'"></div><div><label>WP Item No:</label><input id="_mirWP" value="'+(D.wpItemNo||"")+'"></div></div><label>Site Location:</label><input id="_mirSite" value="'+(D.siteLocation||"")+'"></div>';
+h+='<div class="card"><h4>Material Particulars</h4>';
+h+='<label>Material Description:</label><select id="_mirItem">'+mats+'</select><label>Specified Quantity:</label><input id="_mirQty" placeholder="e.g. 500 bags"><div class="row"><div><label>Manufacturer:</label><input id="_mirManu"></div><div><label>Country of Origin:</label><input id="_mirOrigin" value="Kenya"></div></div><label>Supplier/Local Agent:</label><input id="_mirSupp"><label>Delivery Note No:</label><input id="_mirDN"><label>Approved Sample/MAR Ref:</label><input id="_mirMAR"></div>';
+h+='<div class="card"><h4>Attached Documentation</h4>';
+h+='<div style="display:flex;align-items:center;gap:8px;margin:3px 0"><input type="checkbox" id="_mirMTC" style="width:auto"><label style="margin:0">Manufacturer Test Certificate (MTC)</label></div><div style="display:flex;align-items:center;gap:8px;margin:3px 0"><input type="checkbox" id="_mirCoC" style="width:auto"><label style="margin:0">Certificate of Conformity (CoC)</label></div><div style="display:flex;align-items:center;gap:8px;margin:3px 0"><input type="checkbox" id="_mirDelNote" style="width:auto"><label style="margin:0">Delivery Note</label></div><div style="display:flex;align-items:center;gap:8px;margin:3px 0"><input type="checkbox" id="_mirBOQ" style="width:auto"><label style="margin:0">Bill of Quantities Reference</label></div></div>';
+h+='<div class="card"><h4>Inspection Findings</h4>';
+h+='<label>Physical Condition:</label><select id="_mirCondition"><option>Good - No damage</option><option>Minor issues noted</option><option>Damaged - see remarks</option></select><label>Batch/Lot Numbers Verified:</label><select id="_mirBatch"><option>Yes - Match specification</option><option>No - Mismatch</option><option>N/A</option></select><label>Grading/Specification Check:</label><select id="_mirGrade"><option>Correct grade/specification</option><option>Wrong grade delivered</option><option>Pending lab test</option></select><label>Outcome:</label><select id="_mirStatus"><option>Approved</option><option>Approved with Comments</option><option>Rejected</option></select><label>Remarks/Comments:</label><textarea id="_mirRemarks"></textarea></div>';
+h+='<div class="card"><h4>Sign-Off</h4>';
+h+='<label>Contractor Representative:</label><input id="_mirContractorRep"><label>Ministry/Public Works Inspector:</label><input id="_mirInspector"><label>Date Inspected:</label><input type="date" id="_mirInspectedDate" value="'+globalDate+'"></div>';
+h+='<button class="btn" onclick="saveMIR()">Save MIR</button><button class="btn btn-secondary" onclick="go(\'mir\')">Cancel</button>';
+document.getElementById("content").innerHTML=h;
 }
-
-function loadMIRItems(){var cat=document.getElementById("_mirCat").value;var items=MIR_CATEGORIES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_mirItem").innerHTML=h;}
-
-function saveMIR(){
-if(!D.mirs)D.mirs=[];
-D.mirs.push({id:uid(),date:document.getElementById("_entryDate").value,category:document.getElementById("_mirCat").value,material:document.getElementById("_mirItem").value,supplier:document.getElementById("_mirSupp").value,qty:document.getElementById("_mirQty").value,location:document.getElementById("_mirLoc").value,status:document.getElementById("_mirStatus").value,remarks:document.getElementById("_mirRemarks").value,timestamp:Date.now()});
-save();toast("MIR saved!");go("mir");
-}
+function saveMIR(){if(!D.mirs)D.mirs=[];D.mirs.push({id:uid(),mirNo:document.getElementById("_mirNo").value,date:document.getElementById("_entryDate").value,dateArrived:document.getElementById("_mirArrived").value,inspDateReq:document.getElementById("_mirInspDate").value,project:document.getElementById("_mirProject").value,contract:document.getElementById("_mirContract").value,wpItem:document.getElementById("_mirWP").value,site:document.getElementById("_mirSite").value,material:document.getElementById("_mirItem").value,qty:document.getElementById("_mirQty").value,manufacturer:document.getElementById("_mirManu").value,origin:document.getElementById("_mirOrigin").value,supplier:document.getElementById("_mirSupp").value,deliveryNote:document.getElementById("_mirDN").value,marRef:document.getElementById("_mirMAR").value,hasMTC:document.getElementById("_mirMTC").checked,hasCoC:document.getElementById("_mirCoC").checked,hasDelNote:document.getElementById("_mirDelNote").checked,hasBOQ:document.getElementById("_mirBOQ").checked,condition:document.getElementById("_mirCondition").value,batchVerified:document.getElementById("_mirBatch").value,gradeCheck:document.getElementById("_mirGrade").value,status:document.getElementById("_mirStatus").value,remarks:document.getElementById("_mirRemarks").value,contractorRep:document.getElementById("_mirContractorRep").value,inspector:document.getElementById("_mirInspector").value,dateInspected:document.getElementById("_mirInspectedDate").value,timestamp:Date.now()});save();toast("MIR saved!");go("mir");}
+function printMIR(){var mirs=D.mirs||[];var w=window.open("","_blank","width=900,height=700");var html='<!DOCTYPE html><html><head><title>MIR Report</title><style>body{font-family:monospace;font-size:10px;padding:15px;color:#000}table{border-collapse:collapse;width:100%;margin:8px 0}th,td{border:1px solid #000;padding:3px}th{background:#ddd}h3,h4{text-align:center;margin:5px 0}@media print{body{margin:0;padding:8px}}</style></head><body>';for(var i=0;i<mirs.length;i++){var m=mirs[i];html+='<h3>MINISTRY OF PUBLIC WORKS - REPUBLIC OF KENYA</h3><h3>MATERIAL INSPECTION REQUEST (MIR)</h3><p><b>MIR No:</b> '+m.mirNo+' | <b>Date:</b> '+m.date+' | <b>WP:</b> '+m.wpItem+'</p><p><b>Project:</b> '+m.project+' | <b>Contract:</b> '+m.contract+' | <b>Site:</b> '+m.site+'</p><hr><h4>MATERIAL PARTICULARS</h4><table><tr><td><b>Material:</b></td><td>'+m.material+'</td><td><b>Qty:</b></td><td>'+m.qty+'</td></tr><tr><td><b>Manufacturer:</b></td><td>'+m.manufacturer+'</td><td><b>Origin:</b></td><td>'+m.origin+'</td></tr><tr><td><b>Supplier:</b></td><td>'+m.supplier+'</td><td><b>DN No:</b></td><td>'+m.deliveryNote+'</td></tr></table><p><b>Attachments:</b> MTC: '+(m.hasMTC?"Yes":"No")+' | CoC: '+(m.hasCoC?"Yes":"No")+' | DN: '+(m.hasDelNote?"Yes":"No")+' | BOQ: '+(m.hasBOQ?"Yes":"No")+'</p><hr><h4>INSPECTION FINDINGS</h4><table><tr><td><b>Condition:</b></td><td>'+m.condition+'</td><td><b>Batch:</b></td><td>'+m.batchVerified+'</td></tr><tr><td><b>Grade:</b></td><td>'+m.gradeCheck+'</td><td><b>Outcome:</b></td><td><b>'+(m.status==="Approved"?'APPROVED':m.status==="Rejected"?'REJECTED':'APPROVED WITH COMMENTS')+'</b></td></tr></table><p><b>Remarks:</b> '+m.remarks+'</p><hr><h4>SIGN-OFF</h4><p><b>Contractor Rep:</b> '+m.contractorRep+' _______________ <b>Ministry Inspector:</b> '+m.inspector+' _______________ <b>Date:</b> '+m.dateInspected+'</p><br><br>';}html+='<p style="font-size:8px;text-align:center">Generated by Construction Manager</p></body></html>';w.document.write(html);w.document.close();setTimeout(function(){w.print();},500);}
 RENDER["report"]=function(){
 reportDate=globalDate;
 var dt=(D.diaries||[]).filter(function(e){return e.date===reportDate;});
