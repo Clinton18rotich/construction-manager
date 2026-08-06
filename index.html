@@ -96,7 +96,115 @@ function addItem(arr,item){if(!D[arr])D[arr]=[];D[arr].push(item);save();}
 function delItem(arr,id){D[arr]=D[arr].filter(function(i){return i.id!==id;});save();}
 
 // ============ CATALOGS ============
-var WORK_ITEMS=["Mobilization - Site Setup","Mobilization - Hoarding","Setting Out - Control Points","Setting Out - Grid Lines","Bulk Excavation","Trench Excavation - Foundations","Trench Excavation - Drainage","Basement Excavation","Swimming Pool Excavation","Underground Tank Excavation","Backfill & Compaction","Hardcore Filling","Murram Blinding","Blinding - 50mm","DPM Installation","Foundation Reinforcement","Foundation Concreting","Pad Footing Concreting","Strip Footing Concreting","Raft Foundation Concreting","Pile Cap Concreting","Basement Raft Concreting","Basement Wall Concreting","Column Starter Bars","Ground Beam Formwork","Ground Beam Reinforcement","Ground Beam Concreting","GFS - Hardcore","GFS - DPM","GFS - Blinding","GFS - BRC","GFS - Formwork","GFS - Concreting","Anti-Termite Treatment","Substructure Backfill","Underground Waterproofing","Tanking Application","Column Reinf - GF","Column Formwork - GF","Column Concreting - GF","Column Concreting - Upper","Column Concreting - Roof","Stanchion Base Concreting","Column Reinf - Upper Floor","Column Formwork - Upper Floor","Column Concreting - Upper Floor","Beam Formwork - GF","Beam Reinf - GF","Beam Concreting - GF","Beam Concreting - Upper","Beam Concreting - Roof","Ring Beam Concreting","Lintel Concreting","Beam Formwork - Upper Floor","Beam Reinf - Upper Floor","Beam Concreting - Upper Floor","Slab Formwork - GF","Slab Reinf - GF","Slab Concreting - GF","Suspended Slab Concreting","Roof Slab Concreting","Staircase Concreting","Ramp Slab Concreting","Suspended Slab Formwork","Suspended Slab Reinf","Suspended Slab Concreting","Roof Slab Formwork","Roof Slab Reinf","Roof Slab Concreting","Steel Stanchion Installation","Steel Beam Installation","Steel Truss Installation","Roof Structure - Timber","Roof Structure - Steel","Roof Underlay Installation","Tile Roofing Installation","Sheet Roofing Installation","Hidden Roof Installation","Ridge & Hip Installation","Valley Installation","Verge & Eaves Finishing","Fascia Board Installation","Soffit Board Installation","Roof Drainage - Gutters","Roof Drainage - Downpipes","Roof Insulation Installation","Skylight Installation","Chimney Construction","Blockwork - GF","Blockwork - Upper Floor","Hoop Iron Installation","Ring Beam","Lintels","Steel Fabrication","Steel Erection","Staircase Formwork","Staircase Reinf","Staircase Concreting","Lift Pit Construction","Septic Tank Construction","Biodigester Excavation","Biodigester Base Slab","Biodigester Walls","Biodigester Filter Media","Biodigester Biogas System","Biodigester Commissioning","Underground Water Tank Construction","Soak Pit Construction","Culvert Installation","Retaining Wall Construction","Waterproofing - Roof","Waterproofing - Wet Areas","Waterproofing - Basement","Underground Drainage - Excavation","Underground Drainage - Pipe Laying","Underground Drainage - Manholes","Underground Drainage - Testing","Underground Water Supply - Trenching","Underground Water Supply - Pipe Laying","Underground Water Supply - Valves","Underground Water Supply - Testing","Underground Electrical - Ducting","Underground Electrical - Cable Pulling","Underground Electrical - Draw Pits","Underground Electrical - Earthing","Underground Electrical - Testing","Underground Fire - Pipework","Underground Fire - Hydrants","Underground Services - Coordination","Underground Services - Marker Tape","Underground Services - Backfilling","Drainage - Below Ground","Drainage - Surface Water","Manhole Construction","Plumbing - Supply Pipes","Plumbing - Drainage Pipes","Plumbing - Roof Drainage","Plumbing - Sanitary Fixtures","Electrical - Containment","Electrical - Cabling","Electrical - DB Installation","Electrical - Fixtures","Electrical - Lighting","Electrical - Power","Fire Services Installation","HVAC Installation","Ventilation Installation","Security System Installation","CCTV Installation","Data/Comms Cabling","Plastering - Internal","Rendering - External","Floor Screeding","Floor Tiling","Wall Tiling","Ceiling Installation","Painting - Internal","Painting - External","Skirting Installation","Architrave Installation","Door Frame Installation","Door Leaf Installation","Window Frame Installation","Window Glazing","Ironmongery Fitting","Kitchen Fitting Installation","Wardrobe Installation","Driveway Concreting","Road Slab Concreting","Kerbs Concreting","Boundary Wall Base Concreting","Gate Post Base Concreting","Drainage Channel Concreting","Water Tank Base Concreting","Water Tank Wall Concreting","Water Tank Roof Concreting","Sump Pit Concreting","Manhole Concreting","Machine Base Concreting","Blinding Concrete Pour","Floor Screed Pour","Paving - Hard","Paving - Cabro","Kerbs & Edging","Driveway Construction","Path/Walkway Construction","Boundary Wall Construction","Fencing Installation","Gate Installation","Gate Automation","Lawn/Turf Laying","Tree Planting","Shrub/Plant Installation","Irrigation System Installation","Outdoor Structure Construction","External Lighting Installation","Swimming Pool Construction","Pool Equipment Installation","Snagging - Internal","Snagging - External","Commissioning - Plumbing","Commissioning - Electrical","Commissioning - Fire","Commissioning - HVAC","Cleaning","Handover to Client"];
+var WORK_ITEMS=[
+// PHASE 0: PRE-CONSTRUCTION
+"Site Possession & Handover","Site Survey & Setting Out","Site Hoarding Installation","Site Office Setup","Material Storage Area Setup","Welfare Facilities Setup","Site Induction & Training","Temporary Power Connection","Temporary Water Connection","Temporary Drainage",
+
+// PHASE 1: DEMOLITION & ENABLING WORKS
+"Demolition - Soft Strip","Demolition - Structural","Demolition - Slab/Basement","Hazardous Material Removal","Asbestos Removal","Site Clearance & Grubbing","Tree Removal/Protection","Topsoil Stripping","Service Disconnection","Service Diversion",
+
+// PHASE 2: EARTHWORKS & EXCAVATION
+"Bulk Excavation - General","Bulk Excavation - Basement","Trench Excavation - Foundations","Trench Excavation - Drainage","Pit Excavation - Lift","Pit Excavation - Septic Tank","Pit Excavation - Biodigester","Pit Excavation - Underground Tank","Pit Excavation - Swimming Pool","Rock Excavation/Breaking","Spoil Removal & Disposal","Stockpile Management","Dewatering - Well Point","Dewatering - Sump Pump","Trim & Level Formation","Proof Rolling Subgrade",
+
+// PHASE 3: SUBSTRUCTURE - FOUNDATIONS
+"Blinding Concrete 50mm","DPM Installation","Pad Footing Formwork","Pad Footing Reinforcement","Pad Footing Concreting","Strip Footing Formwork","Strip Footing Reinforcement","Strip Footing Concreting","Raft Foundation Formwork","Raft Foundation Reinforcement","Raft Foundation Concreting","Pile Cap Formwork","Pile Cap Reinforcement","Pile Cap Concreting","Ground Beam Formwork","Ground Beam Reinforcement","Ground Beam Concreting","Column Starter Bars Installation","Foundation Backfill & Compaction","Anti-Termite Treatment","Underground Waterproofing - External","Underground Tanking System",
+
+// PHASE 4: SUBSTRUCTURE - UNDERGROUND STRUCTURES
+"Basement Wall Formwork","Basement Wall Reinforcement","Basement Wall Concreting","Basement Raft Slab Concreting","Basement Waterproofing","Basement Drainage Installation","Basement Sump & Pump","Swimming Pool Base Slab","Swimming Pool Walls","Swimming Pool Waterproofing","Swimming Pool Pipework","Septic Tank Base Slab","Septic Tank Walls","Septic Tank Cover Slab","Septic Tank Pipework","Biodigester Base Slab","Biodigester Walls","Biodigester Dome","Biodigester Biogas System","Underground Tank Base Slab","Underground Tank Walls","Underground Tank Cover Slab","Lift Pit Base Slab","Lift Pit Walls","Lift Pit Waterproofing","Culvert Base Slab","Culvert Walls","Culvert Cover Slab","Retaining Wall Base","Retaining Wall Stem","Retaining Wall Drainage","Underground Services Trench","Underground Drainage Pipes","Underground Water Supply Pipes","Underground Electrical Ducting","Underground Fire Pipework","Underground Services Backfill",
+
+// PHASE 5: SUPERSTRUCTURE - COLUMNS & WALLS
+"Column Formwork - GF","Column Reinforcement - GF","Column Concreting - GF","Column Formwork - Upper","Column Reinforcement - Upper","Column Concreting - Upper","Column Formwork - Roof","Column Reinforcement - Roof","Column Concreting - Roof","Stanchion/Steel Column Installation","Stanchion Base Plate Grouting","Blockwork - GF","Blockwork - Upper Floor","Hoop Iron Installation","Wall Stiffeners/Buttresses","Ring Beam Formwork","Ring Beam Reinforcement","Ring Beam Concreting","Lintel Formwork","Lintel Reinforcement","Lintel Concreting","Movement Joint Installation","DPC Installation","Weephole Installation",
+
+// PHASE 6: SUPERSTRUCTURE - BEAMS & SLABS
+"Beam Formwork - GF","Beam Reinforcement - GF","Beam Concreting - GF","Beam Formwork - Upper","Beam Reinforcement - Upper","Beam Concreting - Upper","Beam Formwork - Roof","Beam Reinforcement - Roof","Beam Concreting - Roof","GFS Hardcore Filling","GFS DPM","GFS Blinding","GFS BRC Placement","GFS Formwork","GFS Concreting","Suspended Slab Formwork","Suspended Slab Reinforcement","Suspended Slab Concreting","Roof Slab Formwork","Roof Slab Reinforcement","Roof Slab Concreting","Staircase Formwork","Staircase Reinforcement","Staircase Concreting","Staircase Landing","Ramp Slab Formwork","Ramp Slab Reinforcement","Ramp Slab Concreting",
+
+// PHASE 7: STEEL STRUCTURE
+"Steel Truss Fabrication","Steel Truss Erection","Steel Beam Installation","Steel Purlin Installation","Steel Decking Installation","Steel Connection Welding","Steel Connection Bolting","Steel Fire Protection","Steel Anti-Corrosion Paint","Steel Touch-up Paint",
+
+// PHASE 8: ROOF STRUCTURE
+"Roof Truss Installation - Timber","Roof Truss Installation - Steel","Rafter Installation","Purlin Installation","Wall Plate Installation","Tie Beam Installation","Brandering Installation","Counter Batten Installation","T&G Board Installation","Fascia Board Installation","Barge Board Installation","Verge Board Installation","Soffit Board Installation","Eaves Ventilation Installation",
+
+// PHASE 9: ROOF COVERING
+"Roof Underlay/Sisalation Installation","Tile Batten Installation","Concrete Tile Laying","Clay Tile Laying","Iron Sheet Installation - G30","Iron Sheet Installation - G28","Iron Sheet Installation - G32","Box Profile Sheet Installation","Aluminium Sheet Installation","Hidden/Standing Seam Roof Installation","Stone Coated Steel Tile Installation","Ridge Cap Installation","Hip Cap Installation","Valley Gutter Installation","Roof Flashing Installation","Chimney Flashing Installation","Skylight Installation","Roof Window Installation","Roof Ventilator Installation","Lightning Rod Installation","Solar Panel Mounting",
+
+// PHASE 10: ROOF DRAINAGE
+"Gutter Installation - UPVC","Gutter Installation - Aluminium","Gutter Installation - Galvanized","Downpipe Installation","Rainwater Head/Hopper Installation","Shoe/Offset Bend Installation","Gutter Bracket Installation","Downpipe Clip Installation","Leaf Guard Installation","First Flush Diverter Installation","Rainwater Harvesting Tank Installation",
+
+// PHASE 11: EXTERNAL WALLS & FINISHES
+"External Rendering - Scratch Coat","External Rendering - Finish Coat","External Painting - Primer","External Painting - Finish","Stone Cladding Installation","Curtain Wall Installation","External Wall Tiling","External Wall Waterproofing",
+
+// PHASE 12: PLUMBING - FIRST FIX
+"Plumbing First Fix - Supply Pipes","Plumbing First Fix - Drainage Pipes","Plumbing First Fix - Vent Pipes","Plumbing First Fix - Hot Water Pipes","Plumbing First Fix - Gas Pipes","Pressure Test - Supply","Leak Test - Drainage","Pipe Insulation Installation","Underground Pipe Testing","Pipe Marker Tape Installation",
+
+// PHASE 13: ELECTRICAL - FIRST FIX
+"Electrical First Fix - Conduit Installation","Electrical First Fix - Back Boxes","Electrical First Fix - Cable Pulling","Electrical First Fix - DB Installation","Electrical First Fix - Earthing","Electrical First Fix - Data Cabling","Electrical First Fix - CCTV Cabling","Electrical First Fix - Intercom Cabling","Electrical First Fix - Fire Alarm Cabling","Electrical First Fix - Solar Cabling","Insulation Resistance Test","Earth Resistance Test",
+
+// PHASE 14: HVAC - FIRST FIX
+"HVAC First Fix - Ducting","HVAC First Fix - Refrigerant Pipes","HVAC First Fix - Drain Pipes","HVAC First Fix - Fresh Air Intake","Ventilation First Fix - Ducting","Ventilation First Fix - Extract Points","Kitchen Hood Ducting Installation",
+
+// PHASE 15: FIRE SERVICES - FIRST FIX
+"Fire First Fix - Sprinkler Pipes","Fire First Fix - Hose Reel Points","Fire First Fix - Hydrant Points","Fire First Fix - Detection Cabling","Fire First Fix - Alarm Cabling","Sprinkler Pressure Test",
+
+// PHASE 16: SECURITY & COMMS - FIRST FIX
+"Security First Fix - CCTV Cabling","Security First Fix - Access Control Cabling","Security First Fix - Intercom Cabling","Data First Fix - CAT6 Cabling","Data First Fix - Fibre Cabling","TV First Fix - Coaxial Cabling",
+
+// PHASE 17: INTERNAL WALLS & PLASTERING
+"Internal Plastering - Scratch Coat","Internal Plastering - Finish Coat","Internal Plastering - Ceiling","Chicken Mesh Installation","Corner Bead Installation","Plasterboard/Drywall Installation","Plasterboard Joint Taping","Wall Chasing for Services",
+
+// PHASE 18: FLOOR SCREEDING
+"Floor Screeding - Internal","Floor Screeding - Balcony/Terrace","Floor Screeding - Wet Areas","Floor Screed Curing","Floor Level Check","Self-Levelling Compound",
+
+// PHASE 19: CEILING INSTALLATION
+"Suspended Ceiling Grid Installation","Ceiling Tile Installation","Gypsum Ceiling Board Installation","Ceiling Joint Taping","Bulkhead Installation","Cove Ceiling Installation","PVC Ceiling Panel Installation","Ceiling Insulation Installation",
+
+// PHASE 20: JOINERY - FIRST FIX
+"Door Frame Installation","Window Frame Installation","Door Frame Packing & Fixing","Window Frame Sealing","Wardrobe Carcass Installation","Kitchen Cabinet Carcass Installation","Vanity Unit Installation",
+
+// PHASE 21: WALL & FLOOR TILING
+"Wall Tiling - Bathrooms","Wall Tiling - Kitchen Splashback","Wall Tiling - Feature Walls","Floor Tiling - Internal","Floor Tiling - Balcony/Terrace","Floor Tiling - Wet Areas","Tile Grouting","Expansion Joint Installation","Tile Trim Installation",
+
+// PHASE 22: PLUMBING - SECOND FIX
+"WC Installation","Basin Installation","Shower Tray Installation","Bath Installation","Bidet Installation","Urinal Installation","Sink Installation","Mixer Tap Installation","Bib Tap Installation","Shower Valve & Head Installation","Soap Dish/Holder Installation","Toilet Paper Holder Installation","Towel Rail Installation","Robe Hook Installation","Grab Bar Installation","Mirror Installation","Water Heater Installation","Booster Pump Installation","Water Filter Installation","Water Tank Connection","Pressure Reducing Valve Installation","Stop Cock Installation","Water Meter Installation",
+
+// PHASE 23: ELECTRICAL - SECOND FIX
+"Socket Outlet Installation","Switch Installation","Light Fitting Installation","LED Panel Installation","Ceiling Fan Installation","Exhaust Fan Installation","Electric Heater Installation","USB Socket Installation","TV Point Installation","Data Point Termination","Telephone Point Installation","DB Final Connection","MCB/RCD Installation","Circuit Labeling",
+
+// PHASE 24: HVAC - SECOND FIX
+"AC Indoor Unit Installation","AC Outdoor Unit Installation","AC Commissioning","Ventilation Grille Installation","Extract Fan Installation","Air Curtain Installation","Thermostat Installation",
+
+// PHASE 25: FIRE SERVICES - SECOND FIX
+"Fire Extinguisher Placement","Fire Hose Reel Installation","Fire Hydrant Installation","Sprinkler Head Installation","Smoke Detector Installation","Heat Detector Installation","Manual Call Point Installation","Fire Alarm Panel Installation","Fire Bell/Sounder Installation","Emergency Light Installation","Exit Sign Installation","Fire Door Installation",
+
+// PHASE 26: SECURITY - SECOND FIX
+"CCTV Camera Installation","CCTV NVR Setup","Access Control Reader Installation","Access Control Lock Installation","Video Intercom Installation","Alarm Panel Installation","Motion Sensor Installation","Panic Button Installation","Electric Fence Installation",
+
+// PHASE 27: JOINERY - SECOND FIX
+"Door Leaf Installation","Door Hardware Installation","Door Closer Installation","Door Stopper Installation","Window Glazing","Window Hardware Installation","Wardrobe Door/Drawer Installation","Wardrobe Fitting Installation","Kitchen Cabinet Door/Drawer Installation","Kitchen Countertop Installation","Skirting Installation","Architrave Installation","Picture Rail Installation","Dado Rail Installation",
+
+// PHASE 28: PAINTING & DECORATING
+"Painting - Primer/Undercoat","Painting - Internal Walls","Painting - Internal Ceilings","Painting - External Walls","Painting - Doors & Frames","Painting - Windows & Frames","Painting - Skirting & Architrave","Gloss Painting - Woodwork","Gloss Painting - Metalwork","Varnishing - Timber","Wallpaper Installation","Textured Finish Application","Feature Wall Installation",
+
+// PHASE 29: INTERIOR DESIGN FINISHES
+"False Ceiling Installation","Bulkhead Installation","Coving Installation","Cornice Installation","Wall Paneling Installation","Curtain Track Installation","Blind Installation","Built-in Furniture Installation","Glass Partition Installation","Drywall Partition Installation","Mirror Installation","Signage Installation","Notice Board Installation",
+
+// PHASE 30: FLOOR FINISHES
+"Vinyl Flooring Installation","Carpet Installation","Wood Flooring Installation","Laminate Flooring Installation","Epoxy Floor Application","Terrazzo Flooring","Floor Polishing","Floor Sealing",
+
+// PHASE 31: EXTERNAL WORKS - HARD LANDSCAPING
+"Paving Installation","Cabro Block Laying","Kerbs Installation","Edging Installation","Driveway Construction","Road Construction","Path/Walkway Construction","Boundary Wall Construction","Gate Post Installation","Sliding Gate Installation","Swing Gate Installation","Gate Motor Installation","Gate Automation Setup","Bollard Installation","Guardrail Installation","Crash Barrier Installation",
+
+// PHASE 32: EXTERNAL WORKS - SOFT LANDSCAPING
+"Topsoil Placement","Lawn/Turf Laying","Tree Planting","Shrub Planting","Flower Bed Installation","Mulching","Irrigation System Installation","Sprinkler Installation","Drip Irrigation Installation","Garden Lighting Installation","Outdoor Structure Construction","Pergola/Gazebo Installation","Water Feature Installation","Pond Construction","Benches Installation","Litter Bin Installation",
+
+// PHASE 33: TRANSPORTATION & ROADWORKS
+"Road Sub-base Preparation","Road Base Course Installation","Prime Coat Application","Asphalt Wearing Course","Asphalt Binder Course","Tack Coat Application","Concrete Road Slab","Road Marking Installation","Road Sign Installation","Road Stud Installation","Speed Hump Installation","Pedestrian Crossing Installation","Traffic Signal Installation","Street Light Installation","Road Drainage Installation","Culvert Installation","Bridge Construction","Retaining Wall Construction",
+
+// PHASE 34: TESTING & COMMISSIONING
+"Plumbing System Testing","Plumbing System Commissioning","Electrical System Testing","Electrical System Commissioning","HVAC System Testing","HVAC System Commissioning","Fire System Testing","Fire System Commissioning","Lift/Elevator Testing","Lift/Elevator Commissioning","Security System Testing","Security System Commissioning","CCTV System Testing","CCTV System Commissioning","Solar System Testing","Solar System Commissioning","Waterproofing Flood Test","Drainage Flow Test","Sound Test - Plumbing","Light Level Test","Thermal Comfort Test","Air Quality Test",
+
+// PHASE 35: SNAGGING & HANDOVER
+"Snagging - Internal","Snagging - External","Snagging - Services","Snagging - Finishes","Snagging - Fixtures & Fittings","Snagging Items Rectification","Final Clean - Internal","Final Clean - External","Final Clean - Windows","Final Clean - Floors","As-Built Drawing Preparation","O&M Manual Preparation","Warranty Document Compilation","Test Certificate Compilation","Final Inspection - Client","Final Inspection - Consultant","Taking Over Certificate","Key Handover","Handover to Client"
+];
 var OBSERVATIONS=["Work progressing well","Good quality workmanship","Materials as per specification","Weather favourable, good productivity","Safety measures in place","Work slightly behind schedule","Quality issues noted","Material shortage reported","Equipment breakdown","Labour shortage","Work stopped due to rain","Rain affected concreting","Work stopped - safety concern","Defective work rejected - NCR raised","Materials rejected","Inspection carried out","Site meeting held","Engineers instruction received","Concrete delivery received","Steel delivery received","Formwork being erected","Reinforcement being tied","Curing ongoing","Site cleaning in progress"];
 var SITE_LOCATIONS=["Site Wide / General","Block A - Ground Floor","Block A - First Floor","Block B - Ground Floor","Block B - First Floor","Block C - Ground Floor","Main Entrance / Gate","Perimeter Wall","Parking Area","Driveway / Access Road","Excavation Area","Foundation / Substructure","Superstructure - Columns","Superstructure - Beams","Superstructure - Slabs","Staircase","Lift Shaft","Roof Level","External Works - Paving","External Works - Drainage","Site Office","Material Storage Area","Workshop / Yard","Guard House","Water Tank / Tower","Septic Tank Area"];
 var NCR_CATEGORIES={"Excavation":["Too deep/shallow","Wrong trench width","Unsafe batter","Poor compaction"],"Substructure":["Blinding thin/uneven","DPM punctured","Wrong rebar","Insufficient cover","Honeycomb"],"Concrete Frame":["Honeycomb","Wrong grade","Insufficient vibration","Formwork not plumb","Cold joint"],"Blockwork":["Wrong block type","Poor bonding","Mortar mix wrong","Hoop iron missing"],"Finishes":["Plaster cracking","Uneven rendering","Wrong paint","Tiles not level"],"General":["Work not to drawing","Unsafe practice","Poor housekeeping"]};
