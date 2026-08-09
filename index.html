@@ -544,6 +544,7 @@ tasks+='<optgroup label="PLUMBING"><option>Plumbing First Fix</option><option>Pl
 tasks+='<optgroup label="ELECTRICAL"><option>Electrical First Fix</option><option>Electrical Second Fix</option><option>DB & Termination</option><option>Testing</option></optgroup>';
 tasks+='<optgroup label="FINISHES"><option>Plastering</option><option>Rendering</option><option>Floor Screeding</option><option>Wall Tiling</option><option>Floor Tiling</option><option>Painting</option></optgroup>';
 tasks+='<optgroup label="JOINERY"><option>Ceiling</option><option>Door Frames</option><option>Door Leaves</option><option>Windows</option><option>Skirting & Architrave</option></optgroup>';
+tasks+='<optgroup label="HEAVY CIVIL"><option>Dredging Operations</option><option>Railway Track Works</option><option>Railway Station Works</option><option>Dam Construction</option><option>Quay Wall Construction</option><option>Jetty/Pier Construction</option><option>Breakwater Construction</option><option>Tunnel Boring/TBM</option><option>Tunnel Lining</option><option>Underwater Works</option><option>Water Treatment Plant</option><option>Borehole Drilling</option><option>Intake Construction</option></optgroup>';
 tasks+='<optgroup label="GENERAL"><option>Site Cleaning</option><option>Material Offloading</option><option>Scaffolding</option><option>Formwork Assembly</option><option>Steel Fixing</option><option>Concreting</option><option>Demolition</option></optgroup>';
 var h='<h3>Add Worker</h3><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'" max="'+today()+'">';
 h+='<label>Worker Name:</label><input id="_lname" placeholder="Full name of worker">';
@@ -1222,6 +1223,7 @@ RENDER["transport"]=function(){
 var h='<h2>Transportation Engineering</h2><p style="color:#aaa;font-size:12px">Roadworks, bridges, traffic, drainage & furniture</p>';
 h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showTransForm()">+ Add Item</button></div>';
 var trans=(D.transport||[]);
+var hv=(D.heavy||[]).filter(function(e){return e.date===reportDate;});for(var i=0;i<hv.length;i++){workText+="   Heavy Civil: "+hv[i].name+" at "+hv[i].location+"\n";}
 if(trans.length===0){h+='<p style="color:#666">No transportation items recorded.</p>';}
 else{
 var cats={};for(var i=0;i<trans.length;i++){var t=trans[i];if(!cats[t.category])cats[t.category]=[];cats[t.category].push(t);}
