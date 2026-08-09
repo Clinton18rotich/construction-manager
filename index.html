@@ -203,7 +203,7 @@ var WORK_ITEMS=[
 "Plumbing System Testing","Plumbing System Commissioning","Electrical System Testing","Electrical System Commissioning","HVAC System Testing","HVAC System Commissioning","Fire System Testing","Fire System Commissioning","Lift/Elevator Testing","Lift/Elevator Commissioning","Security System Testing","Security System Commissioning","CCTV System Testing","CCTV System Commissioning","Solar System Testing","Solar System Commissioning","Waterproofing Flood Test","Drainage Flow Test","Sound Test - Plumbing","Light Level Test","Thermal Comfort Test","Air Quality Test",
 
 // PHASE 35: SNAGGING & HANDOVER
-"Snagging - Internal","Snagging - External","Snagging - Services","Snagging - Finishes","Snagging - Fixtures & Fittings","Snagging Items Rectification","Final Clean - Internal","Final Clean - External","Final Clean - Windows","Final Clean - Floors","As-Built Drawing Preparation","O&M Manual Preparation","Warranty Document Compilation","Test Certificate Compilation","Final Inspection - Client","Final Inspection - Consultant","Taking Over Certificate","Key Handover","Handover to Client"
+"Snagging - Internal","Snagging - External","Snagging - Services","Snagging - Finishes","Snagging - Fixtures & Fittings","Snagging Items Rectification","Final Clean - Internal","Final Clean - External","Final Clean - Windows","Final Clean - Floors","As-Built Drawing Preparation","O&M Manual Preparation","Warranty Document Compilation","Test Certificate Compilation","Final Inspection - Client","Final Inspection - Consultant","Taking Over Certificate","Key Handover","Dredging Operations","Railway Track Laying","Railway Ballasting","Dam Earthworks","Dam Concreting","Quay Wall Construction","Jetty/Pier Construction","Breakwater Construction","Tunnel Excavation","Tunnel Lining","Tunnel Ventilation Installation","Intake Structure Construction","Water Treatment Plant Construction","Borehole Drilling","Well Construction","Pipeline Installation","Cofferdam Construction","Handover to Client"
 ];
 var OBSERVATIONS=["Work progressing well","Good quality workmanship","Materials as per specification","Weather favourable, good productivity","Safety measures in place","Work slightly behind schedule","Quality issues noted","Material shortage reported","Equipment breakdown","Labour shortage","Work stopped due to rain","Rain affected concreting","Work stopped - safety concern","Defective work rejected - NCR raised","Materials rejected","Inspection carried out","Site meeting held","Engineers instruction received","Concrete delivery received","Steel delivery received","Formwork being erected","Reinforcement being tied","Curing ongoing","Site cleaning in progress"];
 var SITE_LOCATIONS=["Site Wide / General","Block A - Ground Floor","Block A - First Floor","Block B - Ground Floor","Block B - First Floor","Block C - Ground Floor","Main Entrance / Gate","Perimeter Wall","Parking Area","Driveway / Access Road","Excavation Area","Foundation / Substructure","Superstructure - Columns","Superstructure - Beams","Superstructure - Slabs","Staircase","Lift Shaft","Roof Level","External Works - Paving","External Works - Drainage","Site Office","Material Storage Area","Workshop / Yard","Guard House","Water Tank / Tower","Septic Tank Area"];
@@ -1204,6 +1204,8 @@ RENDER["transport"]=function(){
 var h='<h2>Transportation Engineering</h2><p style="color:#aaa;font-size:12px">Roadworks, bridges, traffic, drainage & furniture</p>';
 h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showTransForm()">+ Add Item</button></div>';
 var trans=(D.transport||[]);
+// Heavy Civil
+var hv=(D.heavy||[]).filter(function(e){return e.date===reportDate;});for(var i=0;i<hv.length;i++){workText+="   Heavy Civil: "+hv[i].name+" at "+hv[i].location+"\n";}
 if(trans.length===0){h+='<p style="color:#666">No transportation items recorded.</p>';}
 else{
 var cats={};for(var i=0;i<trans.length;i++){var t=trans[i];if(!cats[t.category])cats[t.category]=[];cats[t.category].push(t);}
@@ -1472,6 +1474,8 @@ var land=(D.landscape||[]).filter(function(e){return e.date===reportDate;});
 for(var i=0;i<land.length;i++){workText+="   Landscape: "+land[i].name+" at "+land[i].location+"\n";}
 // Transport
 var trans=(D.transport||[]).filter(function(e){return e.date===reportDate;});
+// Heavy Civil
+var hv=(D.heavy||[]).filter(function(e){return e.date===reportDate;});for(var i=0;i<hv.length;i++){workText+="   Heavy Civil: "+hv[i].name+" at "+hv[i].location+"\n";}
 for(var i=0;i<trans.length;i++){workText+="   Transport: "+trans[i].name+" at "+trans[i].location+"\n";}
 if(!workText)workText="No activity recorded for this date.\n";
 
