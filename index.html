@@ -290,7 +290,7 @@ var MEETING_AGENDA=["Confirmation of Previous Minutes","Progress Review","Qualit
 var CONCRETE_MIXES={"C15/20 Blinding":{"ratio":"1:3:6","cement":"250kg (5 bags)","sand":"0.45m3","ballast":"0.9m3","water":"125L","use":"Blinding, lean concrete"},"C20/25 Light Duty":{"ratio":"1:2.5:5","cement":"300kg (6 bags)","sand":"0.44m3","ballast":"0.88m3","water":"150L","use":"Light duty floors"},"C25/30 General RC":{"ratio":"1:2:4","cement":"350kg (7 bags)","sand":"0.42m3","ballast":"0.84m3","water":"175L","use":"Slabs, beams, columns"},"C30/37 Heavy Duty":{"ratio":"1:2:3","cement":"400kg (8 bags)","sand":"0.40m3","ballast":"0.80m3","water":"200L","use":"Heavy duty, water retaining"},"C35/45 Precast":{"ratio":"1:1.5:3","cement":"450kg (9 bags)","sand":"0.38m3","ballast":"0.76m3","water":"200L","use":"Precast elements"},"C40/50 High Strength":{"ratio":"1:1.5:2.5","cement":"500kg (10 bags)","sand":"0.36m3","ballast":"0.72m3","water":"200L","use":"Bridge works"}};
 
 // ============ NAVIGATION ============
-var NAV=[{id:"dashboard",label:"Home"},{id:"diary",label:"Diary"},{id:"inspections",label:"Inspections"},{id:"ncr",label:"NCRs"},{id:"instructions",label:"S.I."},{id:"materials",label:"Materials"},{id:"stock",label:"Stock"},{id:"mir",label:"MIR"},{id:"cubes",label:"Cubes"},{id:"defects",label:"Defects"},{id:"concrete",label:"Concrete"},{id:"labour",label:"Labour"},{id:"plant",label:"Plant"},{id:"formwork",label:"Formwork"},{id:"bbs",label:"BBS"},{id:"underground",label:"Underground"},{id:"roof",label:"Roof"},{id:"landscape",label:"Landscape"},{id:"transport",label:"Transport"},{id:"heavy",label:"Heavy Civil"},{id:"marine",label:"Marine"},{id:"runway",label:"Runway"},{id:"bridges",label:"Bridges"},{id:"finishes",label:"Finishes"},{id:"interior",label:"Interior"},{id:"fixtures",label:"Fixtures"},{id:"openings",label:"Openings"},{id:"services",label:"Services"},{id:"meetings",label:"Meetings"},{id:"delays",label:"Delays"},{id:"drawings",label:"Drawings"},{id:"rfi",label:"RFIs"},{id:"stopwork",label:"Stop Work"},{id:"rejections",label:"MRN"},{id:"report",label:"REPORT"},{id:"project",label:"Settings"}];
+var NAV=[{id:"dashboard",label:"Home"},{id:"diary",label:"Diary"},{id:"inspections",label:"Inspections"},{id:"ncr",label:"NCRs"},{id:"instructions",label:"S.I."},{id:"materials",label:"Materials"},{id:"stock",label:"Stock"},{id:"mir",label:"MIR"},{id:"cubes",label:"Cubes"},{id:"defects",label:"Defects"},{id:"concrete",label:"Concrete"},{id:"labour",label:"Labour"},{id:"plant",label:"Plant"},{id:"formwork",label:"Formwork"},{id:"bbs",label:"BBS"},{id:"underground",label:"Underground"},{id:"roof",label:"Roof"},{id:"landscape",label:"Landscape"},{id:"transport",label:"Transport"},{id:"heavy",label:"Heavy Civil"},{id:"marine",label:"Marine"},{id:"runway",label:"Runway"},{id:"bridges",label:"Bridges"},{id:"pipeline",label:"Pipeline"},{id:"geotech",label:"Geotech"},{id:"irrigation",label:"Irrigation"},{id:"traffic",label:"Traffic"},{id:"finishes",label:"Finishes"},{id:"interior",label:"Interior"},{id:"fixtures",label:"Fixtures"},{id:"openings",label:"Openings"},{id:"services",label:"Services"},{id:"meetings",label:"Meetings"},{id:"delays",label:"Delays"},{id:"drawings",label:"Drawings"},{id:"rfi",label:"RFIs"},{id:"stopwork",label:"Stop Work"},{id:"rejections",label:"MRN"},{id:"report",label:"REPORT"},{id:"project",label:"Settings"}];
 var current="dashboard";
 function nav(){
 var h="";for(var i=0;i<NAV.length;i++){h+='<button class="'+(NAV[i].id===current?"active":"")+'" onclick="go(\''+NAV[i].id+'\')">'+NAV[i].label+'</button>';}
@@ -1597,6 +1597,119 @@ document.getElementById("content").innerHTML=h;loadBrItems();
 }
 function loadBrItems(){var cat=document.getElementById("_brCat").value;var items=BRIDGE_CATEGORIES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_brItem").innerHTML=h;}
 function saveBridge(){if(!D.bridges)D.bridges=[];var d=document.getElementById("_entryDate").value;var name=document.getElementById("_brItem").value;var loc=document.getElementById("_brLoc").value;D.bridges.push({id:uid(),date:d,category:document.getElementById("_brCat").value,name:name,location:loc,qty:document.getElementById("_brQty").value,unit:document.getElementById("_brUnit").value,status:document.getElementById("_brStatus").value,notes:document.getElementById("_brNotes").value,timestamp:Date.now()});save();toast("Saved!");go("bridges");}
+// ============ PIPELINES ============
+var PIPELINE_CATEGORIES={
+"Pipeline - Route":["Route survey & setting out","ROW clearing & grubbing","ROW grading & access","Trench excavation machine","Trench excavation rock","Trench bedding 150mm sand","Pipe laying steel","Pipe laying HDPE","Pipe laying concrete","Pipe laying ductile iron","Pipe jointing welding","Pipe jointing mechanical coupling","Pipe jointing bell & spigot","Pipe wrapping/coating","Pipe lowering into trench","Thrust block construction","Valve chamber construction","Air valve installation","Scour valve installation","Pressure testing hydrostatic","Pressure testing pneumatic","Trench backfill selected","Trench backfill compaction","Trench marker tape","Cathodic protection anodes","Cathodic protection test stations","Pipeline crossing road","Pipeline crossing river","Pipeline crossing railway","Pipeline pigging station","Pipeline flow meter","Pipeline SCADA telemetry"],
+"Pipeline - Stations":["Pump station civil works","Pump station pumps installation","Pump station pipework","Pump station electrical","Pump station control room","Valve station civil works","Valve station valves installation","Metering station civil works","Metering station equipment","Compressor station civil works","Compressor station equipment","Terminal export facility","Storage tank civil works","Storage tank erection","Storage tank pipework","Storage tank fire fighting"]
+};
+var PIPELINE_STATUS=["Not started","ROW cleared","Trenching","Pipe laying","Jointing","Testing","Backfilled","Commissioned","Completed"];
+RENDER["pipeline"]=function(){
+var h='<h2>Pipelines</h2><p style="color:#aaa;font-size:12px">Oil, Gas & Water Pipelines</p>';
+h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showPipelineForm()">+ Add Item</button></div>';
+var pl=(D.pipeline||[]);
+if(pl.length===0){h+='<p style="color:#666">No pipeline items recorded.</p>';}
+else{
+var cats={};for(var i=0;i<pl.length;i++){var it=pl[i];if(!cats[it.category])cats[it.category]=[];cats[it.category].push(it);}
+var ck=Object.keys(cats);
+for(var c=0;c<ck.length;c++){var cat=ck[c];var items=cats[cat];
+h+='<div class="card"><h4>'+cat+' ('+items.length+')</h4><table style="font-size:10px"><tr><th>Item</th><th>Location</th><th>Qty</th><th>Status</th><th></th></tr>';
+for(var i=0;i<items.length;i++){var it=items[i];h+='<tr><td>'+it.name+'</td><td>'+it.location+'</td><td>'+it.qty+' '+it.unit+'</td><td><span class="tag '+(it.status==="Completed"||it.status==="Commissioned"?"tag-pass":"tag-open")+'">'+it.status+'</span></td><td><button class="btn btn-red btn-sm" style="padding:2px 6px;font-size:10px" onclick="delItem(\'pipeline\',\''+it.id+'\');go(\'pipeline\')">X</button></td></tr>';}
+h+='</table></div>';}
+}
+return h;
+};
+function showPipelineForm(){
+var cats="";var ck=Object.keys(PIPELINE_CATEGORIES);for(var i=0;i<ck.length;i++){cats+='<option value="'+ck[i]+'">'+ck[i]+'</option>';}
+var h='<h3>Add Pipeline Item</h3><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'" max="'+today()+'"><label>Category:</label><select id="_plCat" onchange="loadPlItems()">'+cats+'</select><label>Item:</label><select id="_plItem"></select><label>Location/Chainage:</label><input id="_plLoc"><div class="row"><div><label>Quantity:</label><input id="_plQty" type="number" value="1"></div><div><label>Unit:</label><select id="_plUnit"><option>m</option><option>m2</option><option>m3</option><option>km</option><option>Pieces</option><option>Sets</option></select></div></div><label>Status:</label><select id="_plStatus">';
+for(var i=0;i<PIPELINE_STATUS.length;i++){h+='<option>'+PIPELINE_STATUS[i]+'</option>';}
+h+='</select><label>Notes:</label><input id="_plNotes"><button class="btn" onclick="savePipeline()">Save</button><button class="btn btn-secondary" onclick="go(\'pipeline\')">Cancel</button>';
+document.getElementById("content").innerHTML=h;loadPlItems();
+}
+function loadPlItems(){var cat=document.getElementById("_plCat").value;var items=PIPELINE_CATEGORIES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_plItem").innerHTML=h;}
+function savePipeline(){if(!D.pipeline)D.pipeline=[];var d=document.getElementById("_entryDate").value;var name=document.getElementById("_plItem").value;var loc=document.getElementById("_plLoc").value;D.pipeline.push({id:uid(),date:d,category:document.getElementById("_plCat").value,name:name,location:loc,qty:document.getElementById("_plQty").value,unit:document.getElementById("_plUnit").value,status:document.getElementById("_plStatus").value,notes:document.getElementById("_plNotes").value,timestamp:Date.now()});save();toast("Saved!");go("pipeline");}
+var GEOTECH_CATEGORIES={"Field Investigation":["Desk study & site reconnaissance","Trial pits machine excavated","Trial pits logging & sampling","Borehole cable percussion","Borehole rotary drilling","Borehole diamond core","Borehole SPT testing","Borehole sampling","Borehole piezometer","Cone penetration test CPT","Dynamic cone penetration DCP","Plate bearing test","CBR test","Infiltration test","Geophysical survey seismic","Geophysical survey resistivity","Pile load test static","Pile load test dynamic PDA","Pile integrity test PIT"],"Lab Testing":["Moisture content","Atterberg limits","Particle size distribution","Compaction Proctor","CBR laboratory","Triaxial test UU","Triaxial test CU","Consolidation oedometer","Shear box test","Permeability test","Rock point load test","Rock uniaxial compression","Chemical analysis pH sulphates","Organic content"],"Reporting":["Factual report site data","Factual report lab data","Interpretative report ground model","Foundation recommendations","Slope stability assessment","Earthworks specification","Ground improvement recommendations","Geotechnical design report","Monitoring report settlement","Monitoring report groundwater"]};
+var GEOTECH_STATUS=["Not started","Mobilized","Fieldwork","Lab testing","Reporting","Completed"];
+RENDER["geotech"]=function(){
+var h='<h2>Geotechnical Investigation</h2><p style="color:#aaa;font-size:12px">Field & Lab Testing</p>';
+h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showGeotechForm()">+ Add Item</button></div>';
+var gt=(D.geotech||[]);
+if(gt.length===0){h+='<p style="color:#666">No geotechnical items recorded.</p>';}
+else{
+var cats={};for(var i=0;i<gt.length;i++){var it=gt[i];if(!cats[it.category])cats[it.category]=[];cats[it.category].push(it);}
+var ck=Object.keys(cats);
+for(var c=0;c<ck.length;c++){var cat=ck[c];var items=cats[cat];
+h+='<div class="card"><h4>'+cat+' ('+items.length+')</h4><table style="font-size:10px"><tr><th>Item</th><th>Location</th><th>Qty</th><th>Status</th><th></th></tr>';
+for(var i=0;i<items.length;i++){var it=items[i];h+='<tr><td>'+it.name+'</td><td>'+it.location+'</td><td>'+it.qty+' '+it.unit+'</td><td><span class="tag '+(it.status==="Completed"?"tag-pass":"tag-open")+'">'+it.status+'</span></td><td><button class="btn btn-red btn-sm" style="padding:2px 6px;font-size:10px" onclick="delItem(\'geotech\',\''+it.id+'\');go(\'geotech\')">X</button></td></tr>';}
+h+='</table></div>';}
+}
+return h;
+};
+function showGeotechForm(){
+var cats="";var ck=Object.keys(GEOTECH_CATEGORIES);for(var i=0;i<ck.length;i++){cats+='<option value="'+ck[i]+'">'+ck[i]+'</option>';}
+var h='<h3>Add Geotechnical Item</h3><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'" max="'+today()+'"><label>Category:</label><select id="_gtCat" onchange="loadGtItems()">'+cats+'</select><label>Item:</label><select id="_gtItem"></select><label>Location:</label><input id="_gtLoc"><div class="row"><div><label>Quantity:</label><input id="_gtQty" type="number" value="1"></div><div><label>Unit:</label><select id="_gtUnit"><option>m</option><option>m2</option><option>m3</option><option>Pieces</option><option>Sets</option></select></div></div><label>Status:</label><select id="_gtStatus">';
+for(var i=0;i<GEOTECH_STATUS.length;i++){h+='<option>'+GEOTECH_STATUS[i]+'</option>';}
+h+='</select><label>Notes:</label><input id="_gtNotes"><button class="btn" onclick="saveGeotech()">Save</button><button class="btn btn-secondary" onclick="go(\'geotech\')">Cancel</button>';
+document.getElementById("content").innerHTML=h;loadGtItems();
+}
+function loadGtItems(){var cat=document.getElementById("_gtCat").value;var items=GEOTECH_CATEGORIES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_gtItem").innerHTML=h;}
+function saveGeotech(){if(!D.geotech)D.geotech=[];var d=document.getElementById("_entryDate").value;var name=document.getElementById("_gtItem").value;var loc=document.getElementById("_gtLoc").value;D.geotech.push({id:uid(),date:d,category:document.getElementById("_gtCat").value,name:name,location:loc,qty:document.getElementById("_gtQty").value,unit:document.getElementById("_gtUnit").value,status:document.getElementById("_gtStatus").value,notes:document.getElementById("_gtNotes").value,timestamp:Date.now()});save();toast("Saved!");go("geotech");}
+var IRRIGATION_CATEGORIES={"Irrigation Canals":["Main canal excavation","Main canal lining concrete","Main canal lining geomembrane","Secondary canal excavation","Secondary canal lining","Tertiary canal","Canal turnout/offtake","Canal cross regulator","Canal check structure","Canal drop structure","Canal flume/aqueduct","Canal siphon/culvert","Canal escape/spillway","Canal access road"],"Irrigation Distribution":["Pipe distribution HDPE","Pipe distribution PVC","Flow control valve","Pressure regulating valve","Air release valve","Flow meter","Hydrant installation","Sprinkler system pump","Sprinkler mainline","Sprinkler laterals","Sprinkler heads","Drip irrigation mainline","Drip irrigation laterals","Drip irrigation emitters","Drip irrigation filters","Fertigation system","Automation solenoid valves","Automation controller","Soil moisture sensors"],"Drainage":["Field drain open ditch","Field drain pipe drain","Field drain gravel envelope","Field drain geotextile wrap","Collector drain","Main drain","Drain outfall structure","Drain flap gate/tide gate","Drain sump & pump","Subsurface drain perforated pipe","Subsurface drain mole drain","Surface drainage land grading","Surface drainage grassed waterway"]};
+var IRRIGATION_STATUS=["Not started","Excavation","Lining/pipe laying","Structures","Testing","Commissioned","Completed"];
+RENDER["irrigation"]=function(){
+var h='<h2>Irrigation & Drainage</h2><p style="color:#aaa;font-size:12px">Canals, Distribution & Field Drainage</p>';
+h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showIrrigationForm()">+ Add Item</button></div>';
+var ir=(D.irrigation||[]);
+if(ir.length===0){h+='<p style="color:#666">No irrigation items recorded.</p>';}
+else{
+var cats={};for(var i=0;i<ir.length;i++){var it=ir[i];if(!cats[it.category])cats[it.category]=[];cats[it.category].push(it);}
+var ck=Object.keys(cats);
+for(var c=0;c<ck.length;c++){var cat=ck[c];var items=cats[cat];
+h+='<div class="card"><h4>'+cat+' ('+items.length+')</h4><table style="font-size:10px"><tr><th>Item</th><th>Location</th><th>Qty</th><th>Status</th><th></th></tr>';
+for(var i=0;i<items.length;i++){var it=items[i];h+='<tr><td>'+it.name+'</td><td>'+it.location+'</td><td>'+it.qty+' '+it.unit+'</td><td><span class="tag '+(it.status==="Completed"||it.status==="Commissioned"?"tag-pass":"tag-open")+'">'+it.status+'</span></td><td><button class="btn btn-red btn-sm" style="padding:2px 6px;font-size:10px" onclick="delItem(\'irrigation\',\''+it.id+'\');go(\'irrigation\')">X</button></td></tr>';}
+h+='</table></div>';}
+}
+return h;
+};
+function showIrrigationForm(){
+var cats="";var ck=Object.keys(IRRIGATION_CATEGORIES);for(var i=0;i<ck.length;i++){cats+='<option value="'+ck[i]+'">'+ck[i]+'</option>';}
+var h='<h3>Add Irrigation Item</h3><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'" max="'+today()+'"><label>Category:</label><select id="_irCat" onchange="loadIrItems()">'+cats+'</select><label>Item:</label><select id="_irItem"></select><label>Location:</label><input id="_irLoc"><div class="row"><div><label>Quantity:</label><input id="_irQty" type="number" value="1"></div><div><label>Unit:</label><select id="_irUnit"><option>m</option><option>m2</option><option>m3</option><option>km</option><option>Pieces</option><option>Sets</option></select></div></div><label>Status:</label><select id="_irStatus">';
+for(var i=0;i<IRRIGATION_STATUS.length;i++){h+='<option>'+IRRIGATION_STATUS[i]+'</option>';}
+h+='</select><label>Notes:</label><input id="_irNotes"><button class="btn" onclick="saveIrrigation()">Save</button><button class="btn btn-secondary" onclick="go(\'irrigation\')">Cancel</button>';
+document.getElementById("content").innerHTML=h;loadIrItems();
+}
+function loadIrItems(){var cat=document.getElementById("_irCat").value;var items=IRRIGATION_CATEGORIES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_irItem").innerHTML=h;}
+function saveIrrigation(){if(!D.irrigation)D.irrigation=[];var d=document.getElementById("_entryDate").value;var name=document.getElementById("_irItem").value;var loc=document.getElementById("_irLoc").value;D.irrigation.push({id:uid(),date:d,category:document.getElementById("_irCat").value,name:name,location:loc,qty:document.getElementById("_irQty").value,unit:document.getElementById("_irUnit").value,status:document.getElementById("_irStatus").value,notes:document.getElementById("_irNotes").value,timestamp:Date.now()});save();toast("Saved!");go("irrigation");}
+var TRAFFIC_CATEGORIES={
+"Traffic Signals":["Traffic signal pole foundation","Traffic signal pole erection","Traffic signal head 3 aspect","Traffic signal head pedestrian","Traffic signal controller cabinet","Traffic signal controller programming","Traffic signal loop detectors","Traffic signal video detection","Traffic signal push button","Traffic signal audible/tactile","Traffic signal intergreen timing","Traffic signal coordination SCATS","Traffic signal UPS battery backup","Traffic signal commissioning"],
+"Intersections & Roundabouts":["Intersection priority control","Intersection mini roundabout","Intersection signalized","Intersection channelization islands","Roundabout single lane","Roundabout multi lane","Roundabout splitter islands","Roundabout central island landscaping","Roundabout signage and lighting","Roundabout pedestrian crossings","Interchange diamond","Interchange trumpet","Interchange cloverleaf","Grade separation overpass","Grade separation underpass"],
+"Road Safety":["Road safety audit Stage 1 design","Road safety audit Stage 2 detailed","Road safety audit Stage 3 construction","Road safety audit Stage 4 opening","Guardrail installation","Crash cushion installation","Speed humps","Speed cushions","Raised table crossing","Rumble strips","Chevron signs","Delineator posts","Hazard markers","Safety barrier concrete","Safety barrier steel","Pedestrian refuge islands","Pedestrian crossing zebra","Pedestrian crossing signalized","School zone 30km/h zone","School zone flashing lights","Speed limit signs","Variable message signs","Pavement markings stop lines","Pavement markings give way","Pavement markings arrows","Pavement markings hatching","Road studs cats eyes","Street lighting at intersections"],
+"Traffic Management":["Traffic management plan TMP","Traffic control plan TCP","Temporary traffic signals","Temporary signage","Temporary barriers water filled","Temporary barriers concrete","Traffic cones","Delineator posts","Flagmen stop-go control","Pilot vehicle for convoy","Road closure/diversion","Detour route signage","Night works lighting","Pedestrian management","Cyclist management","Public notification/information","Emergency vehicle access maintained"]
+};
+var TRAFFIC_STATUS=["Not started","Designed","Approved","Installed","Commissioned","Completed"];
+RENDER["traffic"]=function(){
+var h='<h2>Traffic Engineering</h2><p style="color:#aaa;font-size:12px">Signals, Intersections, Safety & Management</p>';
+h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showTrafficForm()">+ Add Item</button></div>';
+var tf=(D.traffic||[]);
+if(tf.length===0){h+='<p style="color:#666">No traffic items recorded.</p>';}
+else{
+var cats={};for(var i=0;i<tf.length;i++){var it=tf[i];if(!cats[it.category])cats[it.category]=[];cats[it.category].push(it);}
+var ck=Object.keys(cats);
+for(var c=0;c<ck.length;c++){var cat=ck[c];var items=cats[cat];
+h+='<div class="card"><h4>'+cat+' ('+items.length+')</h4><table style="font-size:10px"><tr><th>Item</th><th>Location</th><th>Qty</th><th>Status</th><th></th></tr>';
+for(var i=0;i<items.length;i++){var it=items[i];h+='<tr><td>'+it.name+'</td><td>'+it.location+'</td><td>'+it.qty+' '+it.unit+'</td><td><span class="tag '+(it.status==="Completed"||it.status==="Commissioned"?"tag-pass":"tag-open")+'">'+it.status+'</span></td><td><button class="btn btn-red btn-sm" style="padding:2px 6px;font-size:10px" onclick="delItem(\'traffic\',\''+it.id+'\');go(\'traffic\')">X</button></td></tr>';}
+h+='</table></div>';}
+}
+return h;
+};
+function showTrafficForm(){
+var cats="";var ck=Object.keys(TRAFFIC_CATEGORIES);for(var i=0;i<ck.length;i++){cats+='<option value="'+ck[i]+'">'+ck[i]+'</option>';}
+var h='<h3>Add Traffic Item</h3><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'" max="'+today()+'"><label>Category:</label><select id="_tfCat" onchange="loadTfItems()">'+cats+'</select><label>Item:</label><select id="_tfItem"></select><label>Location:</label><input id="_tfLoc"><div class="row"><div><label>Quantity:</label><input id="_tfQty" type="number" value="1"></div><div><label>Unit:</label><select id="_tfUnit"><option>m</option><option>m2</option><option>Pieces</option><option>Sets</option></select></div></div><label>Status:</label><select id="_tfStatus">';
+for(var i=0;i<TRAFFIC_STATUS.length;i++){h+='<option>'+TRAFFIC_STATUS[i]+'</option>';}
+h+='</select><label>Notes:</label><input id="_tfNotes"><button class="btn" onclick="saveTraffic()">Save</button><button class="btn btn-secondary" onclick="go(\'traffic\')">Cancel</button>';
+document.getElementById("content").innerHTML=h;loadTfItems();
+}
+function loadTfItems(){var cat=document.getElementById("_tfCat").value;var items=TRAFFIC_CATEGORIES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_tfItem").innerHTML=h;}
+function saveTraffic(){if(!D.traffic)D.traffic=[];var d=document.getElementById("_entryDate").value;var name=document.getElementById("_tfItem").value;var loc=document.getElementById("_tfLoc").value;D.traffic.push({id:uid(),date:d,category:document.getElementById("_tfCat").value,name:name,location:loc,qty:document.getElementById("_tfQty").value,unit:document.getElementById("_tfUnit").value,status:document.getElementById("_tfStatus").value,notes:document.getElementById("_tfNotes").value,timestamp:Date.now()});save();toast("Saved!");go("traffic");}
 RENDER["report"]=function(){
 reportDate=globalDate;
 var dt=(D.diaries||[]).filter(function(e){return e.date===reportDate;});
