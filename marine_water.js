@@ -1,0 +1,39 @@
+// ============ MARINE & WATER ============
+var MARINE_CATEGORIES={
+"Wet Docks":["Wet dock basin excavation","Wet dock floor slab 500mm","Wet dock walls 400mm RC","Wet dock gate - mitre type","Wet dock gate - sector type","Wet dock gate - caisson type","Wet dock gate seals","Wet dock gate operating machinery","Wet dock impounding pumps","Wet dock culvert/filling system","Wet dock bollards 100T","Wet dock fendering","Wet dock capstan/winch","Wet dock navigation lights"],
+"Dry Docks":["Dry dock floor slab 1m thick","Dry dock walls 500mm RC","Dry dock gate - flap type","Dry dock gate - sliding caisson","Dry dock gate seals rubber J-seal","Dry dock dewatering pumps","Dry dock flooding valves","Dry dock keel blocks cast iron","Dry dock bilge blocks timber","Dry dock crane rails 50T","Dry dock capstans","Dry dock bollards","Dry dock services power/water/air"],
+"Weirs & Barrages":["Weir ogee type","Weir broad crested","Weir sharp crested","Weir V-notch","Barrage gated weir","Barrage radial gates","Barrage vertical lift gates","Barrage flap gates","Barrage fish pass/ladder","Barrage navigation lock","Barrage stilling basin","Barrage scour protection","Barrage abutments","Barrage divide wall"],
+"Flumes & Channels":["Flume Parshall flume","Flume Venturi flume","Flume trapezoidal","Flume rectangular","Flume approach channel","Flume throat section","Flume stilling well","Flume ultrasonic level sensor","Open channel trapezoidal lined","Open channel rectangular lined","Open channel drop structure","Open channel check structure","Open channel turnout/offtake","Open channel cross regulator"],
+"Seawalls & Revetments":["Seawall vertical concrete","Seawall stepped concrete","Seawall recurved concrete","Seawall sheet pile","Seawall riprap mound","Seawall gabion","Seawall toe protection","Seawall wave return wall","Seawall drainage weeps","Revetment stone pitching grouted","Revetment stone pitching dry","Revetment concrete mattress","Revetment articulated block","Revetment gabion mattress","Revetment geotextile filter"],
+"Dolphins & Moorings":["Dolphin berthing","Dolphin mooring","Dolphin breasting","Dolphin steel pipe pile type","Dolphin concrete caisson type","Dolphin fender panel","Dolphin quick release hook","Dolphin navigation light","Mooring buoy single point","Mooring bollard 50T","Mooring bollard 100T","Mooring bollard 150T","Mooring bollard 200T","Mooring ring recessed"],
+"Intake Structures":["River intake screened","River intake submerged","Lake/reservoir intake multi-level","Intake screen coarse bar","Intake screen fine bar","Intake screen travelling band","Intake trash rack","Intake gate/penstock","Intake fish screen","Intake flow meter","Intake level sensor","Intake scour/silt flush","Intake desilting basin"],
+"Water Treatment Works":["Raw water inlet chamber","Coagulation/flash mixing","Flocculation tank","Sedimentation tank","Filtration rapid sand","Filtration pressure filter","Filtration activated carbon","Filtration membrane/ultrafiltration","Filtration reverse osmosis","Disinfection chlorine dosing","Disinfection ozone","Disinfection UV treatment","Clear water tank","Treated water pumping station","Chemical storage & dosing","Sludge thickening","Sludge drying beds","Sludge dewatering","Backwash water recovery","Treated water quality lab","Treated water reservoir"],
+"Wells & Boreholes":["Hydrogeological survey","Test drilling/borehole","Borehole rotary drilling","Borehole DTH hammer","Borehole casing steel/PVC","Borehole screen slotted","Borehole gravel pack","Borehole grout seal","Borehole sanitary seal","Borehole development air lift","Borehole yield test","Borehole water quality test","Borehole pump submersible","Borehole pump hand pump","Borehole pump solar","Borehole rising main","Borehole headworks/chamber","Borehole flow meter","Borehole level indicator","Borehole chlorination","Borehole completion report","Dug well concrete rings","Dug well cover slab","Dug well apron & drainage"],
+"Discharge & Regulating":["Sluice gate cast iron","Sluice gate electric actuated","Penstock weir type","Penstock orifice type","Stop logs aluminium","Butterfly valve","Gate valve resilient seated","Non-return/check valve","Pressure reducing valve","Flow control valve","Float valve","Air release valve","Surge protection air vessel","Surge protection surge tank","Flow meter electromagnetic","Flow meter ultrasonic","Level sensor ultrasonic","Level sensor radar","Discharge channel concrete lined","Discharge channel riprap","Discharge channel stilling basin","Discharge channel energy dissipator","Discharge channel scour protection"]
+};
+var MARINE_STATUS=["Not started","Excavated","Structure built","Equipment installed","Testing","Commissioned","Completed"];
+
+RENDER["marine"]=function(){
+var h='<h2>Marine & Water</h2><p style="color:#aaa;font-size:12px">Docks, Weirs, Flumes, Seawalls, Intake, Treatment, Wells, Discharge</p>';
+h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showMarineForm()">+ Add Item</button></div>';
+var mv=(D.marine||[]);
+if(mv.length===0){h+='<p style="color:#666">No marine/water items recorded.</p>';}
+else{
+var cats={};for(var i=0;i<mv.length;i++){var it=mv[i];if(!cats[it.category])cats[it.category]=[];cats[it.category].push(it);}
+var ck=Object.keys(cats);
+for(var c=0;c<ck.length;c++){var cat=ck[c];var items=cats[cat];
+h+='<div class="card"><h4>'+cat+' ('+items.length+')</h4><table style="font-size:10px"><tr><th>Item</th><th>Location</th><th>Qty</th><th>Status</th><th></th></tr>';
+for(var i=0;i<items.length;i++){var it=items[i];h+='<tr><td>'+it.name+'</td><td>'+it.location+'</td><td>'+it.qty+' '+it.unit+'</td><td><span class="tag '+(it.status==="Completed"||it.status==="Commissioned"?"tag-pass":"tag-open")+'">'+it.status+'</span></td><td><button class="btn btn-red btn-sm" style="padding:2px 6px;font-size:10px" onclick="delItem(\'marine\',\''+it.id+'\');go(\'marine\')">X</button></td></tr>';}
+h+='</table></div>';}
+}
+return h;
+};
+function showMarineForm(){
+var cats="";var ck=Object.keys(MARINE_CATEGORIES);for(var i=0;i<ck.length;i++){cats+='<option value="'+ck[i]+'">'+ck[i]+'</option>';}
+var h='<h3>Add Marine/Water Item</h3><label>Date:</label><input type="date" id="_entryDate" value="'+globalDate+'" max="'+today()+'"><label>Category:</label><select id="_mvCat" onchange="loadMvItems()">'+cats+'</select><label>Item:</label><select id="_mvItem"></select><label>Location:</label><input id="_mvLoc"><div class="row"><div><label>Quantity:</label><input id="_mvQty" type="number" value="1"></div><div><label>Unit:</label><select id="_mvUnit"><option>m</option><option>m2</option><option>m3</option><option>Pieces</option><option>Sets</option><option>Tons</option></select></div></div><label>Status:</label><select id="_mvStatus">';
+for(var i=0;i<MARINE_STATUS.length;i++){h+='<option>'+MARINE_STATUS[i]+'</option>';}
+h+='</select><label>Notes:</label><input id="_mvNotes"><button class="btn" onclick="saveMarine()">Save</button><button class="btn btn-secondary" onclick="go(\'marine\')">Cancel</button>';
+document.getElementById("content").innerHTML=h;loadMvItems();
+}
+function loadMvItems(){var cat=document.getElementById("_mvCat").value;var items=MARINE_CATEGORIES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_mvItem").innerHTML=h;}
+function saveMarine(){if(!D.marine)D.marine=[];var d=document.getElementById("_entryDate").value;var name=document.getElementById("_mvItem").value;var loc=document.getElementById("_mvLoc").value;D.marine.push({id:uid(),date:d,category:document.getElementById("_mvCat").value,name:name,location:loc,qty:document.getElementById("_mvQty").value,unit:document.getElementById("_mvUnit").value,status:document.getElementById("_mvStatus").value,notes:document.getElementById("_mvNotes").value,timestamp:Date.now()});save();toast("Saved!");go("marine");}
