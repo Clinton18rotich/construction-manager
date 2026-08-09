@@ -670,6 +670,23 @@ if(!D.diaries)D.diaries=[];
 D.diaries.push({id:uid(),date:dt,time:new Date().toLocaleTimeString(),activity:"Drawing Received: "+nm,location:"Site Office",labour:"0",equipment:"",obs:document.getElementById("dwgTitle").value,remarks:""});
 save();toast("Drawing saved!");go("drawings");
 }
+var RFI_CATEGORIES={
+"Structural - General":["Clarify reinforcement detail at column/beam junction","Confirm concrete grade for ___","Clarify foundation depth at Grid ___","Confirm rebar size and spacing","Clarify construction joint locations","Request structural engineer approval for rebar substitution","Confirm load-bearing capacity of ___ wall","Clarify camber requirements for beam spanning ___m"],
+"Structural - Foundations":["Clarify pile cap reinforcement detail","Confirm pile toe level","Clarify ground beam connection to piles","Request pile load test results","Clarify raft foundation thickness","Confirm blinding concrete specification"],
+"Structural - Steel":["Clarify stanchion base plate detail","Confirm steel section sizes for ___","Request steel connection detail","Clarify steel fire protection specification","Confirm bolt grade and torque values","Request steel fabrication drawings"],
+"Architectural":["Clarify floor finish type for ___ room","Confirm ceiling height at ___ area","Clarify wall finish for ___ area","Request door/window schedule for Block ___","Clarify colour scheme for ___ area","Confirm tile size and pattern","Clarify skirting detail at ___ junction","Request elevation detail for ___ wall","Confirm false ceiling layout","Clarify bulkhead dimensions"],
+"Plumbing":["Clarify pipe sizing for ___ supply line","Confirm drainage invert levels at manhole ___","Request plumbing schematic for ___ floor","Clarify water tank capacity and location","Confirm sanitary ware model/specification","Request grease trap detail for kitchen","Clarify rainwater harvesting system","Confirm hot water system specification","Request fire hydrant layout","Clarify sewer connection detail"],
+"Electrical":["Clarify cable sizing for ___ circuit","Confirm distribution board location for ___ floor","Request lighting layout for ___ area","Clarify emergency lighting requirements","Confirm socket outlet heights","Request earthing detail","Clarify solar PV system specification","Confirm fire alarm device locations","Request CCTV camera positions","Clarify access control wiring"],
+"HVAC & Mechanical":["Clarify AC unit sizing for ___ room","Confirm ducting route for ___ floor","Request ventilation calculation for ___ area","Clarify kitchen exhaust hood specification","Confirm fresh air intake location","Request mechanical ventilation layout"],
+"Fire Services":["Clarify sprinkler coverage for ___ area","Confirm fire hose reel locations","Request fire alarm zone plan","Clarify emergency exit signage requirements","Confirm fire door ratings for ___","Request smoke control system detail"],
+"Roofing":["Clarify roof truss design for span ___m","Confirm roof covering specification","Request valley gutter detail","Clarify skylight size and position","Confirm fascia and soffit detail","Request roof drainage calculations"],
+"Waterproofing":["Clarify basement waterproofing system","Confirm roof waterproofing membrane type","Request wet area waterproofing detail","Clarify expansion joint waterbar specification","Confirm tanking system for lift pit"],
+"Roads & Transport":["Clarify pavement design for ___ road","Confirm asphalt mix design","Request road marking layout","Clarify culvert size and type at Ch ___","Confirm guardrail specification","Request traffic sign schedule"],
+"Dams & Water":["Clarify dam foundation grout curtain design","Confirm spillway capacity calculation","Request outlet works gate specification","Clarify reservoir impoundment schedule","Confirm dam instrumentation locations"],
+"Marine & Waterfront":["Clarify quay wall design parameters","Confirm dredge depth at berth ___","Request fender specification and layout","Clarify bollard capacity requirements","Confirm scour protection design"],
+"Tunnels":["Clarify tunnel support classification for Ch ___","Confirm TBM operating parameters","Request cross passage spacing","Clarify ventilation fan sizing","Confirm emergency exit locations"],
+"Environmental":["Clarify waste management plan","Confirm noise mitigation measures","Request environmental monitoring schedule","Clarify spoil disposal site approval","Confirm dust suppression requirements"]
+};
 RENDER["rfi"]=function(){
 var list="";var rfis=(D.rfis||[]).filter(function(e){return e.date===globalDate;});
 if(rfis.length===0){list='<p style="color:#666">No RFIs for this date.</p>';}
