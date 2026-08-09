@@ -93,6 +93,10 @@ var globalDate=today();
 function setGlobalDate(d){globalDate=d;go(current);}
 function fmtGlobalDate(){return new Date(globalDate).toLocaleDateString("en-KE",{weekday:"short",day:"numeric",month:"short",year:"numeric"});}
 function addItem(arr,item){if(!D[arr])D[arr]=[];D[arr].push(item);save();}
+function autoDiary(activity,location,details,entryDate){
+if(!D.diaries)D.diaries=[];
+D.diaries.push({id:uid(),date:entryDate||globalDate,time:new Date().toLocaleTimeString(),activity:activity,location:location||"",labour:"0",equipment:"",obs:details||"",remarks:""});
+}
 function delItem(arr,id){D[arr]=D[arr].filter(function(i){return i.id!==id;});save();}
 
 // ============ CATALOGS ============
