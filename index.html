@@ -892,7 +892,6 @@ var SERVICE_STATUS=["Rough-in","First fix","Second fix","Testing","Commissioned"
 RENDER["services"]=function(){
 var h='<h2>Building Services</h2><p style="color:#aaa;font-size:12px">Track by location & construction phase</p>';
 h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showServiceForm()">+ Add Service</button></div>';
-var svc=(D.services||[]);
 if(svc.length===0){h+='<p style="color:#666">No services recorded.</p>';}
 else{
 var locs={};for(var i=0;i<svc.length;i++){var s=svc[i];var key=(s.location||"General")+" | "+s.category;if(!locs[key])locs[key]=[];locs[key].push(s);}
@@ -982,7 +981,6 @@ var LANDSCAPE_STATUS=["Specified","Ordered","Delivered","In progress","Installed
 RENDER["landscape"]=function(){
 var h='<h2>Landscaping & External Works</h2><p style="color:#aaa;font-size:12px">Hard & soft landscaping, irrigation, outdoor structures</p>';
 h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showLandscapeForm()">+ Add Item</button></div>';
-var land=(D.landscape||[]);
 if(land.length===0){h+='<p style="color:#666">No landscaping items recorded.</p>';}
 else{
 var cats={};for(var i=0;i<land.length;i++){var l=land[i];if(!cats[l.category])cats[l.category]=[];cats[l.category].push(l);}
@@ -1228,7 +1226,6 @@ var TRANSPORT_STATUS=["Not started","Earthworks done","Sub-base done","Base done
 RENDER["transport"]=function(){
 var h='<h2>Transportation Engineering</h2><p style="color:#aaa;font-size:12px">Roadworks, bridges, traffic, drainage & furniture</p>';
 h+='<div style="display:flex;gap:8px;margin:10px 0"><button class="btn btn-blue btn-sm" onclick="showTransForm()">+ Add Item</button></div>';
-var trans=(D.transport||[]);
 var hv=(D.heavy||[]).filter(function(e){return e.date===reportDate;});for(var i=0;i<hv.length;i++){workText+="   Heavy Civil: "+hv[i].name+" at "+hv[i].location+"\n";}
 if(trans.length===0){h+='<p style="color:#666">No transportation items recorded.</p>';}
 else{
