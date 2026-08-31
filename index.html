@@ -747,7 +747,7 @@ function rdate(){return new Date(reportDate).toLocaleDateString("en-KE",{weekday
 // ============ DRAWINGS REGISTER ============
 RENDER["drawings"]=function(){
 var h='<h2>Drawings Register</h2><p style="color:#aaa;font-size:12px">Upload plans, grid checklist, photo markup</p>';
-h+='<div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap"><button class="btn btn-blue btn-sm" onclick="showDrawingForm()">+ Add Drawing</button> <button class="btn btn-green btn-sm" onclick="showColumnAnalyzer()">Column Analyzer</button> <button class="btn btn-green btn-sm" onclick="showFootingAnalyzer()">Footing Analyzer</button> <button class="btn btn-green btn-sm" onclick="showBeamAnalyzer()">Beam Analyzer</button> <button class="btn btn-green btn-sm" onclick="showStairAnalyzer()">Stair Analyzer</button> <button class="btn btn-green btn-sm" onclick="showSlabAnalyzer()">Slab Analyzer</button></div>';
+h+='<div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap"><button class="btn btn-blue btn-sm" onclick="showDrawingForm()">+ Add Drawing</button> <button class="btn btn-green btn-sm" onclick="showColumnAnalyzer()">Column Analyzer</button> <button class="btn btn-green btn-sm" onclick="showFootingAnalyzer()">Footing Analyzer</button> <button class="btn btn-green btn-sm" onclick="showBeamAnalyzer()">Beam Analyzer</button> <button class="btn btn-green btn-sm" onclick="showStairAnalyzer()">Stair Analyzer</button> <button class="btn btn-green btn-sm" onclick="showSlabAnalyzer()">Slab Analyzer</button> <button class="btn btn-sm" style="background:#FF9500;color:#000" onclick="showSavedAnalyses()">View Saved</button></div>';
 var drawings=D.drawings||[];
 if(drawings.length===0){h+='<p style="color:#666">No drawings registered.</p>';}
 else{
@@ -773,19 +773,7 @@ document.getElementById("content").innerHTML=h;
 function readGP(i){var f=i.files[0];if(f&&f.size<1e7){var r=new FileReader();r.onload=function(e){document.getElementById("_gpd").value=e.target.result;};r.readAsDataURL(f);}}
 function saveGN(did){var dw=D.drawings.find(function(x){return x.id===did;});if(!dw)return;if(!dw.grids)dw.grids=[];dw.grids.push({grid:document.getElementById("_gr").value,status:document.getElementById("_gs").value,note:document.getElementById("_gn").value,photo:document.getElementById("_gpd").value||null,date:globalDate});save();toast("Grid note saved!");go("drawings");}
 function viewGridPhoto(did,gr){var dw=D.drawings.find(function(x){return x.id===did;});if(!dw)return;var g=dw.grids.find(function(x){return x.grid===gr;});if(g&&g.photo){var w=window.open("","_blank");w.document.write('<html><body style="margin:0;background:#000;text-align:center"><p style="color:#fff">'+gr+'</p><img src="'+g.photo+'" style="max-width:100%"></body></html>');w.document.close();}}
-function viewPDF(id){var d=D.drawings.find(function(x){return x.id===id;});if(d&&d.fileData){if(typeof Android!=="undefined"&&Android.viewPdf){Android.viewPdf(d.fileData,d.number);}else{var w=window.open("","_blank");w.document.write('<html><body style="margin:0"><iframe src="'+d.fileData+'" width="100%" height="100%"></iframe></body></html>');w.document.close();}}}
-function showDrawingForm(){
-var h='<h3>Add Drawing</h3>';
-h+='<label>Drawing Number:</label><input id="dwgNo">';
-h+='<label>Title:</label><input id="dwgTitle">';
-h+='<label>Discipline:</label><select id="dwgDisc"><option>Structural</option><option>Architectural</option><option>Civil</option><option>Mechanical</option><option>Electrical</option><option>Plumbing</option><option>Fire Services</option><option>Landscape</option></select>';
-h+='<label>Revision:</label><input id="dwgRev" value="A">';
-h+='<label>Status:</label><select id="dwgStatus"><option>For Review</option><option>Approved</option><option>For Construction</option><option>Superseded</option><option>As-Built</option></select>';
-h+='<label>Date Received:</label><input type="date" id="dwgDate" value="'+globalDate+'">';
-h+='<label>Upload Plan (PDF/Image):</label><input type="file" id="dwgFile" accept=".pdf,.jpg,.png" onchange="readDwgFile(this)"><input type="hidden" id="dwgFileData"><small style="color:#aaa;font-size:10px">Max 15MB</small>';
-h+='<button class="btn" onclick="saveDrawing()">Save</button><button class="btn btn-secondary" onclick="go(\'drawings\')">Cancel</button>';
-document.getElementById("content").innerHTML=h;
-}
+function viewPDF(id){var d=D.drawings.find(function(x){return x.id===id;});if(d&&d.fileData){if(typeof Android!=="undefined"&&Android.viewPdf){Android.viewPdf(d.fileData,d.number);}else{var viewer='<h3>'+d.number+' - '+d.title+'</h3><button class="btn btn-sm btn-secondary" onclick="go(\'drawings\')">Back to Drawings</button><br><br>';if(d.fileData.indexOf("data:application/pdf")===0){viewer+='<iframe src="'+d.fileData+'" style="width:100%;height:600px;border:none"></iframe>';}else{viewer+='<img src="'+d.fileData+'" style="max-width:100%;height:auto">';}viewer+='<p style="font-size:10px;color:#aaa">Discipline: '+d.discipline+' | Rev: '+d.revision+'</p>';document.getElementById("content").innerHTML=viewer;}}}
 function readDwgFile(input){
 var file=input.files[0];
 if(file&&file.size<15000000){
@@ -798,6 +786,7 @@ function showColumnAnalyzer(){
 var h='<h3>Column Reinforcement Analyzer</h3>';
 h+='<div class="card"><label>Column Ref:</label><input id="_colRef" placeholder="e.g. C1, C2"><div class="row"><div><label>Column Width (mm):</label><input id="_colW" type="number" value="230"></div><div><label>Column Depth (mm):</label><input id="_colD" type="number" value="230"></div></div><div class="row"><div><label>Column Height (mm):</label><input id="_colH" type="number" value="3000"></div><div><label>Main Bars Size:</label><select id="_colMainBar"><option>Y10</option><option>Y12</option><option>Y16</option><option>Y20</option><option>Y25</option></select></div></div><label>Number of Main Bars:</label><input id="_colMainCount" type="number" value="4"><div class="row"><div><label>Stirrup Size:</label><select id="_colStirrup"><option>R6</option><option>R8</option><option>R10</option></select></div><div><label>Stirrup Spacing (mm):</label><input id="_colStirrupSpacing" type="number" value="200"></div></div><label>Cover (mm):</label><input id="_colCover" type="number" value="25"><button class="btn" onclick="analyzeColumn()">Analyze</button></div>';
 h+='<div id="_colResult"></div>';
+h+='<button class="btn btn-secondary" onclick="go(\'drawings\')">Back to Drawings</button>';
 document.getElementById("content").innerHTML=h;
 }
 function analyzeColumn(){
@@ -840,6 +829,7 @@ function showFootingAnalyzer(){
 var h='<h3>Footing Reinforcement Analyzer</h3>';
 h+='<div class="card"><label>Footing Ref:</label><input id="_ftRef" placeholder="e.g. F1"><div class="row"><div><label>Length (mm):</label><input id="_ftL" type="number" value="1200"></div><div><label>Width (mm):</label><input id="_ftW" type="number" value="1200"></div></div><div class="row"><div><label>Depth (mm):</label><input id="_ftD" type="number" value="300"></div><div><label>Bar Size:</label><select id="_ftBar"><option>Y10</option><option>Y12</option><option>Y16</option><option>Y20</option></select></div></div><div class="row"><div><label>Spacing (mm):</label><input id="_ftSpacing" type="number" value="200"></div><div><label>Cover (mm):</label><input id="_ftCover" type="number" value="50"></div></div><label>Number of same footings:</label><input id="_ftCount" type="number" value="1"><button class="btn" onclick="analyzeFooting()">Analyze</button></div>';
 h+='<div id="_ftResult"></div>';
+h+='<button class="btn btn-secondary" onclick="go(\'drawings\')">Back to Drawings</button>';
 document.getElementById("content").innerHTML=h;
 }
 function analyzeFooting(){
@@ -858,19 +848,19 @@ var barsInW=Math.ceil((L-2*cover)/spacing)+1;
 var totalBars=barsInL+barsInW;
 var totalLen=totalBars*barLen/1000;
 var totalKg=totalLen*wt*count;
-var html='<div class="card" style="background:#1a1a2e;margin-top:10px"><h4>Footing '+ref+'</h4>';
-html+='<p>'+bar+' @ '+spacing+'mm | Bars L: '+barsInL+' | Bars W: '+barsInW+' | Total: '+totalBars+'</p>';
-html+='<p>Total Length: '+totalLen.toFixed(2)+'m</p>';
-html+='<h4 style="color:#ff9f0a">TOTAL: '+totalKg.toFixed(1)+' kg</h4>';
-var bottomBars12m=Math.ceil(bottomTotal/12);
-var topBars12m=Math.ceil(topTotal/12);
-var stirrupBars12m=Math.ceil(stirrupTotal/12);
+var bars12m=Math.ceil((totalLen*count)/12);
+var html='<div class="card" style="background:#1a1a2e;margin-top:10px"><h4>Footing '+ref+' Analysis</h4>';
+html+='<p>Bar Size: '+bar+' @ '+spacing+'mm c/c</p>';
+html+='<p>Bars in Length direction: '+barsInL+'</p>';
+html+='<p>Bars in Width direction: '+barsInW+'</p>';
+html+='<p>Total Bars per Footing: '+totalBars+'</p>';
+html+='<p>Bar Length: '+barLen.toFixed(0)+'mm</p>';
+html+='<p>Total Length per Footing: '+totalLen.toFixed(2)+'m</p>';
+if(count>1){html+='<p>For '+count+' footings: '+totalKg.toFixed(1)+' kg</p>';}
+html+='<h4 style="color:#ff9f0a">TOTAL STEEL: '+totalKg.toFixed(1)+' kg</h4>';
 html+='<h4 style="color:#30d158">12m BARS NEEDED:</h4>';
-html+='<p style="font-size:11px"><b>'+bottomBars12m+' x 12m '+bottomBar+'</b> (Bottom: '+bottomCount+' x '+bottomLen.toFixed(0)+'mm)</p>';
-html+='<p style="font-size:11px"><b>'+topBars12m+' x 12m '+topBar+'</b> (Top: '+topCount+' x '+topLen.toFixed(0)+'mm)</p>';
-html+='<p style="font-size:11px"><b>'+stirrupBars12m+' x 12m '+stirrup+'</b> (Stirrups: '+stirrupCount+' x '+stirrupPerimeter+'mm)</p>';
-html+='<h4 style="color:#ff9f0a">TOTAL: '+bottomBars12m+' x '+bottomBar+' + '+topBars12m+' x '+topBar+' + '+stirrupBars12m+' x '+stirrup+'</h4>';
-html+='<p style="font-size:10px;color:#aaa">Inspection: '+bar+' @ '+spacing+'mm both ways, cover '+cover+'mm</p>';
+html+='<p style="font-size:11px"><b>'+bars12m+' x 12m '+bar+'</b> (Total: '+(totalBars*count)+' bars x '+barLen.toFixed(0)+'mm)</p>';
+html+='<p style="font-size:10px;color:#aaa">Inspection: '+bar+' @ '+spacing+'mm c/c both ways, cover '+cover+'mm</p>';
 html+='<button class="btn btn-sm btn-green" onclick="saveStructureAnalysis(\''+ref+'\',\'Footing\','+totalKg.toFixed(1)+')">Save</button></div>';
 document.getElementById("_ftResult").innerHTML=html;
 }
@@ -878,6 +868,7 @@ function showBeamAnalyzer(){
 var h='<h3>Beam Reinforcement Analyzer</h3>';
 h+='<div class="card"><label>Beam Ref:</label><input id="_bmRef" placeholder="e.g. B1"><div class="row"><div><label>Width (mm):</label><input id="_bmW" type="number" value="230"></div><div><label>Depth (mm):</label><input id="_bmD" type="number" value="450"></div></div><div class="row"><div><label>Span (mm):</label><input id="_bmSpan" type="number" value="4000"></div><div><label>Bottom Bars:</label><select id="_bmBottomBar"><option>Y12</option><option>Y16</option><option>Y20</option><option>Y25</option></select></div></div><label>No. of Bottom Bars:</label><input id="_bmBottomCount" type="number" value="3"><div class="row"><div><label>Top Bars:</label><select id="_bmTopBar"><option>Y12</option><option>Y16</option><option>Y20</option></select></div><div><label>No. of Top Bars:</label><input id="_bmTopCount" type="number" value="2"></div></div><div class="row"><div><label>Stirrup Size:</label><select id="_bmStirrup"><option>R6</option><option>R8</option><option>R10</option></select></div><div><label>Stirrup Spacing (mm):</label><input id="_bmStirrupSpacing" type="number" value="200"></div></div><label>Cover (mm):</label><input id="_bmCover" type="number" value="25"><button class="btn" onclick="analyzeBeam()">Analyze</button></div>';
 h+='<div id="_bmResult"></div>';
+h+='<button class="btn btn-secondary" onclick="go(\'drawings\')">Back to Drawings</button>';
 document.getElementById("content").innerHTML=h;
 }
 function analyzeBeam(){
@@ -929,6 +920,7 @@ function showStairAnalyzer(){
 var h='<h3>Staircase Reinforcement Analyzer</h3>';
 h+='<div class="card"><label>Stair Ref:</label><input id="_stRef" placeholder="e.g. ST1"><label>Stair Type:</label><select id="_stType"><option>Straight Flight</option><option>Dog-Leg</option><option>Open-Well</option><option>Spiral/Circular</option><option>Cantilever</option><option>Winder</option></select><div class="row"><div><label>Flight Width (mm):</label><input id="_stWidth" type="number" value="1200"></div><div><label>Waist Thickness (mm):</label><input id="_stWaist" type="number" value="150"></div></div><div class="row"><div><label>Number of Risers:</label><input id="_stRisers" type="number" value="15"></div><div><label>Riser Height (mm):</label><input id="_stRiserH" type="number" value="150"></div></div><div class="row"><div><label>Going/Tread (mm):</label><input id="_stGoing" type="number" value="300"></div><div><label>Main Bar Size:</label><select id="_stMainBar"><option>Y10</option><option>Y12</option><option>Y16</option></select></div></div><label>Main Bar Spacing (mm):</label><input id="_stMainSpacing" type="number" value="200"><div class="row"><div><label>Distribution Bar:</label><select id="_stDistBar"><option>Y10</option><option>Y12</option></select></div><div><label>Dist Bar Spacing (mm):</label><input id="_stDistSpacing" type="number" value="250"></div></div><label>Cover (mm):</label><input id="_stCover" type="number" value="20"><button class="btn" onclick="analyzeStair()">Analyze</button></div>';
 h+='<div id="_stResult"></div>';
+h+='<button class="btn btn-secondary" onclick="go(\'drawings\')">Back to Drawings</button>';
 document.getElementById("content").innerHTML=h;
 }
 function analyzeStair(){
@@ -967,7 +959,7 @@ var distKg=distTotal*distWt;
 var totalKg=mainKg+distKg;
 var mainBars12m=Math.ceil(mainTotal/12);
 var distBars12m=Math.ceil(distTotal/12);
-var topBars12m=isSuspended?Math.ceil(topTotal/12):0;
+
 var html='<div class="card" style="background:#1a1a2e;margin-top:10px"><h4>Stair '+ref+' Analysis</h4>';
 html+='<p>Type: '+stairType+' | Total Rise: '+totalRise+'mm ('+risers+' risers @ '+riserH+'mm)</p>';
 html+='<p>Total Going: '+totalGoing+'mm ('+risers+' treads @ '+going+'mm)</p>';
@@ -978,7 +970,7 @@ html+='<h4 style="color:#ff9f0a">TOTAL STEEL: '+totalKg.toFixed(1)+' kg</h4>';
 html+='<h4 style="color:#30d158">12m BARS NEEDED:</h4>';
 html+='<p style="font-size:11px"><b>'+mainBars12m+' x 12m '+mainBar+'</b> (Main bars: '+mainBarCount+' x '+mainBarLen.toFixed(0)+'mm)</p>';
 html+='<p style="font-size:11px"><b>'+distBars12m+' x 12m '+distBar+'</b> (Dist bars: '+distBarCount+' x '+distBarLen.toFixed(0)+'mm)</p>';
-html+='<h4 style="color:#ff9f0a">TOTAL: '+mainBars12m+' x '+mainBar+' + '+distBars12m+' x '+distBar+(isSuspended?' + '+topBars12m+' x '+mainBar+' (top)':'')+'</h4>';
+html+='<h4 style="color:#ff9f0a">TOTAL: '+mainBars12m+' x '+mainBar+' + '+distBars12m+' x '+distBar+'</h4>';
 html+='<p style="font-size:10px;color:#aaa">Inspection: Main '+mainBar+' @ '+mainSpacing+'mm, Dist '+distBar+' @ '+distSpacing+'mm, cover '+cover+'mm, waist '+waist+'mm</p>';
 html+='<button class="btn btn-sm btn-green" onclick="saveStructureAnalysis(\''+ref+'\',\'Stair\','+totalKg.toFixed(1)+')">Save</button></div>';
 document.getElementById("_stResult").innerHTML=html;
@@ -987,6 +979,7 @@ function showSlabAnalyzer(){
 var h='<h3>Slab Reinforcement Analyzer</h3>';
 h+='<div class="card"><label>Slab Ref:</label><input id="_slRef" placeholder="e.g. S1, GF Slab"><label>Slab Type:</label><select id="_slType"><option>Ground Floor Slab</option><option>Suspended Slab</option><option>Roof Slab</option><option>Ribbed Slab</option><option>Waffle Slab</option><option>Flat Slab</option><option>Post-Tensioned</option></select><div class="row"><div><label>Length (mm):</label><input id="_slL" type="number" value="6000"></div><div><label>Width (mm):</label><input id="_slW" type="number" value="4000"></div></div><div class="row"><div><label>Thickness (mm):</label><input id="_slT" type="number" value="150"></div><div><label>Main Bar Size:</label><select id="_slMainBar"><option>Y10</option><option>Y12</option><option>Y16</option></select></div></div><label>Main Bar Spacing (mm):</label><input id="_slMainSpacing" type="number" value="200"><div class="row"><div><label>Distribution Bar:</label><select id="_slDistBar"><option>Y10</option><option>Y12</option></select></div><div><label>Dist Bar Spacing (mm):</label><input id="_slDistSpacing" type="number" value="250"></div></div><label>Cover (mm):</label><input id="_slCover" type="number" value="25"><div class="row"><div><label>Number of same slabs:</label><input id="_slCount" type="number" value="1"></div><div><label>BRC Mesh?</label><select id="_slMesh"><option>No - Use Bars</option><option>A142</option><option>A193</option><option>A252</option><option>A393</option></select></div></div><button class="btn" onclick="analyzeSlab()">Analyze</button></div>';
 h+='<div id="_slResult"></div>';
+h+='<button class="btn btn-secondary" onclick="go(\'drawings\')">Back to Drawings</button>';
 document.getElementById("content").innerHTML=h;
 }
 function analyzeSlab(){
@@ -1033,7 +1026,7 @@ var distKg=distTotal*distWt;
 var totalKg=(mainKg+distKg+topKg+chairsCount*0.617)*count;
 var mainBars12m=Math.ceil(mainTotal/12);
 var distBars12m=Math.ceil(distTotal/12);
-var topBars12m=isSuspended?Math.ceil(topTotal/12):0;
+
 html+='<p>Main Bars: '+mainCount+' x '+mainBar+' @ '+mainLen.toFixed(0)+'mm = '+mainKg.toFixed(1)+' kg</p>';
 html+='<p>Distribution Bars: '+distCount+' x '+distBar+' @ '+distLen.toFixed(0)+'mm = '+distKg.toFixed(1)+' kg</p>';
 if(isSuspended){html+='<p>Top Bars (Sheers): '+topBarCount+' x '+mainBar+' @ '+topBarLen.toFixed(0)+'mm = '+topKg.toFixed(1)+' kg</p>';html+='<p>Chairs: '+chairsCount+' chairs (Y10 @ 1m2) = '+(chairsCount*0.617).toFixed(1)+' kg</p>';}
@@ -1042,11 +1035,30 @@ html+='<h4 style="color:#ff9f0a">TOTAL STEEL: '+totalKg.toFixed(1)+' kg</h4>';
 html+='<h4 style="color:#30d158">12m BARS NEEDED:</h4>';
 html+='<p style="font-size:11px"><b>'+mainBars12m+' x 12m '+mainBar+'</b> (Main: '+mainCount+' x '+mainLen.toFixed(0)+'mm)</p>';
 html+='<p style="font-size:11px"><b>'+distBars12m+' x 12m '+distBar+'</b> (Dist: '+distCount+' x '+distLen.toFixed(0)+'mm)</p>';
-html+='<h4 style="color:#ff9f0a">TOTAL: '+mainBars12m+' x '+mainBar+' + '+distBars12m+' x '+distBar+(isSuspended?' + '+topBars12m+' x '+mainBar+' (top)':'')+'</h4>';
+html+='<h4 style="color:#ff9f0a">TOTAL: '+mainBars12m+' x '+mainBar+' + '+distBars12m+' x '+distBar+'</h4>';
 html+='<p style="font-size:10px;color:#aaa">Inspection: Main '+mainBar+' @ '+mainSpacing+'mm'+(isSuspended?' (with 1m bent-up at supports)':'')+', Dist '+distBar+' @ '+distSpacing+'mm, cover '+cover+'mm, thickness '+T+'mm</p>';
 html+='<button class="btn btn-sm btn-green" onclick="saveStructureAnalysis(\''+ref+'\',\'Slab\','+totalKg.toFixed(1)+')">Save</button></div>';
 }
 document.getElementById("_slResult").innerHTML=html;
+}
+function showSavedAnalyses(){
+var analyses=D.structureAnalysis||[];
+var h='<h3>Saved Structural Analyses Register</h3>';
+if(analyses.length===0){h+='<p style="color:#666">No analyses saved yet. Use the analyzers above to calculate steel.</p>';}
+else{
+h+='<table style="font-size:10px"><tr><th>Ref</th><th>Type</th><th>Steel (kg)</th><th>12m Bars</th><th>Date</th><th></th></tr>';
+var totalSteel=0;var totalBars=0;
+for(var i=0;i<analyses.length;i++){var a=analyses[i];
+var barsEst=Math.ceil(parseFloat(a.totalKg||0)/10);
+totalSteel+=parseFloat(a.totalKg||0);
+totalBars+=barsEst;
+h+='<tr><td>'+a.ref+'</td><td>'+a.type+'</td><td>'+a.totalKg+'</td><td>~'+barsEst+'</td><td>'+a.date+'</td><td><button class="btn btn-red btn-sm" style="padding:1px 4px;font-size:9px" onclick="delItem(\'structureAnalysis\',\''+a.id+'\');showSavedAnalyses()">X</button></td></tr>';}
+h+='</table>';
+h+='<div class="card" style="background:#1a1a2e;margin-top:10px"><h4 style="color:#ff9f0a">TOTAL STEEL: '+totalSteel.toFixed(1)+' kg</h4>';
+h+='<p>Estimated 12m bars (all types): ~'+totalBars+' bars</p></div>';
+}
+h+='<button class="btn btn-secondary" onclick="go(\'drawings\')">Back to Drawings</button>';
+document.getElementById("content").innerHTML=h;
 }
 function saveStructureAnalysis(ref,type,totalKg){
 if(!D.structureAnalysis)D.structureAnalysis=[];
@@ -2387,13 +2399,13 @@ document.getElementById("content").innerHTML=h;loadMsItems();
 function loadMsItems(){var cat=document.getElementById("_msCat").value;var items=MASONRY_CATEGORIES[cat]||[];var h="";for(var i=0;i<items.length;i++){h+='<option>'+items[i]+'</option>';}document.getElementById("_msItem").innerHTML=h;}
 function saveMasonry(){if(!D.masonry)D.masonry=[];var d=document.getElementById("_entryDate").value;var name=document.getElementById("_msItem").value;var loc=document.getElementById("_msLoc").value;var cat=document.getElementById("_msCat").value;D.masonry.push({id:uid(),date:d,category:cat,name:name,location:loc,status:document.getElementById("_msStatus").value,notes:document.getElementById("_msNotes").value,timestamp:Date.now()});autoDiary("Masonry - "+name,loc,"Category: "+cat+" | Status: "+document.getElementById("_msStatus").value,d);save();toast("Saved + diary!");go("masonry");}
 var UPPERFLOOR_CATEGORIES={
-"RC Solid Slab":["Setting out - FFL and slab thickness","Setting out - beam positions if downstand","Formwork - beam soffit","Formwork - beam sides","Formwork - slab soffit plywood 18mm","Formwork - props at 1.2m c/c","Formwork - level ±5mm","Reinforcement - beam bottom bars","Reinforcement - beam top bars","Reinforcement - beam stirrups","Reinforcement - beam side shutters after rebar","Reinforcement - slab bottom bars main span","Reinforcement - distribution bars","Reinforcement - top bars at supports","Reinforcement - cover blocks 25mm","Formwork - edge shutters fixed after rebar","Formwork - openings boxed","Formwork - level re-checked","Concreting - C25/30 min","Concreting - pump or skip","Concreting - poker vibrator","Concreting - level to FFL","Curing - ponding 7 days","Striking - soffit 14-21 days","Backpropping below","Finishing - screed if required"],
-"RC Ribbed Slab":["Setting out - rib positions","Setting out - rib width 100-150mm","Setting out - rib spacing 400-600mm","Formwork - beam soffit and sides","Formwork - slab soffit level","Formwork - rib formers timber","Formwork - hollow block or void formers between ribs","Reinforcement - rib bottom bars","Reinforcement - rib links/stirrups","Reinforcement - topping mesh A142","Reinforcement - distribution bars in topping","Formwork - edge shutters fixed","Concreting - ribs first then topping","Concreting - C25/30","Concreting - compaction in ribs","Concreting - topping 50-75mm","Curing - 7 days","Striking - ribs 14 days","Striking - soffit 21 days"],
-"RC Waffle Slab":["Setting out - waffle grid positions","Setting out - waffle size 600x600 or 900x900","Formwork - table form system","Formwork - waffle moulds plastic","Formwork - waffle moulds steel","Formwork - level ±3mm","Reinforcement - ribs both directions","Reinforcement - rib links","Reinforcement - topping mesh","Reinforcement - solid band at columns","Formwork - edge shutters fixed","Formwork - openings boxed","Concreting - C30/37","Concreting - compaction around moulds","Concreting - topping 75mm min","Curing - 7 days min","Striking - moulds released","Striking - table forms lowered","Backpropping - 2 floors below"],
-"Precast Hollow Core":["Setting out - bearing lines on walls","Setting out - bearing width 100mm min","Delivery - check units for damage","Delivery - check lifting points","Erection - crane capacity","Erection - lifting beam/spreader","Erection - first unit placed","Erection - subsequent units aligned","Grouting - bedding mortar under units","Grouting - key joints grouted","Tie bars at joints","In-situ topping 50mm min","Topping mesh A142","Topping level to FFL","Topping cured 7 days","Services holes cut before concreting","Holes not through prestressing strands"],
-"Precast Beam & Block":["Setting out - beam positions","Setting out - bearing on walls","Beam placement - concrete beams","Beam placement - steel beams","Beam bearing 100mm min","Beam level checked","Block placement between beams","Block density 1350kg/m3 max","Block type - hollow clay/concrete","Blocks laid tight between beams","No blocks resting on edges only","In-situ topping 50mm min","Topping reinforcement A142","Topping falls for drainage where required","Topping cured 7 days"],
+"RC Solid Slab":["Setting out - FFL and slab thickness","Setting out - beam positions if downstand","Formwork - beam soffit","Formwork - beam sides","Formwork - slab soffit plywood 18mm","Formwork - props at 1.2m c/c","Formwork - level ±5mm","Reinforcement - beam bottom bars","Reinforcement - beam top bars","Reinforcement - beam stirrups","Reinforcement - beam side shutters after rebar","Reinforcement - slab bottom bars main span","Reinforcement - distribution bars","Reinforcement - top bars at supports","Reinforcement - cover blocks 25mm","Chairs - installed under top bars at 600x600 c/c","Chairs - separate top and bottom reinforcement","Chairs - height = slab thickness - 2*cover - top bar dia - bottom bar dia","Chairs - not resting on bottom bars only","Chairs - continuous or individual as specified","Chairs - height checked to maintain top bar position","Chairs - no chairs on bottom bars only","Spacers - wheel type under bottom bars","Spacers - spacing at 1m c/c","Cover blocks - checked for correct cover","Formwork - edge shutters fixed after rebar","Formwork - openings boxed","Formwork - level re-checked","Concreting - C25/30 min","Concreting - pump or skip","Concreting - poker vibrator","Concreting - level to FFL","Curing - ponding 7 days","Striking - soffit 14-21 days","Backpropping below","Finishing - screed if required"],
+"RC Ribbed Slab":["Setting out - rib positions","Setting out - rib width 100-150mm","Setting out - rib spacing 400-600mm","Formwork - beam soffit and sides","Formwork - slab soffit level","Formwork - rib formers timber","Formwork - hollow block or void formers between ribs","Reinforcement - rib bottom bars","Reinforcement - rib links/stirrups","Reinforcement - topping mesh A142","Reinforcement - distribution bars in topping","Chairs - under topping mesh at 600x600","Chairs - separate topping mesh from rib bars","Spacers - under rib bars","Cover blocks - correct size to ribs","Formwork - edge shutters fixed","Concreting - ribs first then topping","Concreting - C25/30","Concreting - compaction in ribs","Concreting - topping 50-75mm","Curing - 7 days","Striking - ribs 14 days","Striking - soffit 21 days"],
+"RC Waffle Slab":["Setting out - waffle grid positions","Setting out - waffle size 600x600 or 900x900","Formwork - table form system","Formwork - waffle moulds plastic","Formwork - waffle moulds steel","Formwork - level ±3mm","Reinforcement - ribs both directions","Reinforcement - rib links","Reinforcement - topping mesh","Reinforcement - solid band at columns","Chairs - under topping mesh 600x600","Chairs - separate topping from rib reinforcement","Spacers - in ribs","Cover blocks - to ribs","Formwork - edge shutters fixed","Formwork - openings boxed","Concreting - C30/37","Concreting - compaction around moulds","Concreting - topping 75mm min","Curing - 7 days min","Striking - moulds released","Striking - table forms lowered","Backpropping - 2 floors below"],
+"Precast Hollow Core":["Setting out - bearing lines on walls","Setting out - bearing width 100mm min","Delivery - check units for damage","Delivery - check lifting points","Erection - crane capacity","Erection - lifting beam/spreader","Erection - first unit placed","Erection - subsequent units aligned","Grouting - bedding mortar under units","Grouting - key joints grouted","Tie bars at joints","In-situ topping 50mm min","Topping mesh A142","Chairs - under topping mesh 600x600","Chairs - separate topping from rib reinforcement","Spacers - at bearing","Topping level to FFL","Topping cured 7 days","Services holes cut before concreting","Holes not through prestressing strands"],
+"Precast Beam & Block":["Setting out - beam positions","Setting out - bearing on walls","Beam placement - concrete beams","Beam placement - steel beams","Beam bearing 100mm min","Beam level checked","Block placement between beams","Block density 1350kg/m3 max","Block type - hollow clay/concrete","Blocks laid tight between beams","No blocks resting on edges only","In-situ topping 50mm min","Topping reinforcement A142","Chairs - under topping mesh 600x600","Chairs - separate topping from rib reinforcement","Topping falls for drainage where required","Topping cured 7 days"],
 "Composite Steel Deck":["Setting out - deck span direction","Setting out - bearing on beams 50mm","Deck - profile 60mm deep minimum","Deck - gauge 0.9mm min","Deck - fixed by shot pins","Deck - side laps stitched","Deck - end laps 100mm","Shear studs welded through deck","Shear stud spacing per design","Shear stud pull-out test","Edge trim/closure installed","Formwork - perimeter edge shutter","Mesh A193 placed","Mesh chaired 25mm","Concrete C25/30 min","Concrete placed evenly","Concrete depth checked at low points","Vibration - poker at supports","Surface power float","Temporary props if span >3m","No overloading during construction"],
-"Post-Tensioned Slab":["Setting out - tendon profiles","Setting out - anchorage positions","Formwork - beam soffit if downstand","Formwork - slab soffit level ±3mm","Formwork - edges and openings","Tendon installation - ducts","Tendon installation - profiles at supports","Tendon installation - profiles at midspan","Tendon anchorage - fixed end","Tendon anchorage - stressing end","Bursting reinforcement at anchors","Shear reinforcement at anchors","Concrete C35/45 minimum","Concrete placement avoids ducts","Concrete compaction around anchors","Stressing after 25MPa","Stressing jack calibrated","Stressing sequence as per design","Elongation measured and recorded","Force within ±5%","Wedge seating checked","No slippage during lock-off","Tendon cutting and capping","Anchor grouting","Tendon grouting - cement grout","Tendon grouting - no voids","Striking after full stressing"],
+"Post-Tensioned Slab":["Setting out - tendon profiles","Setting out - anchorage positions","Formwork - beam soffit if downstand","Formwork - slab soffit level ±3mm","Formwork - edges and openings","Tendon installation - ducts","Tendon installation - profiles at supports","Tendon installation - profiles at midspan","Tendon anchorage - fixed end","Tendon anchorage - stressing end","Bursting reinforcement at anchors","Shear reinforcement at anchors","Chairs - under top bars at supports","Chairs - separate top from bottom bars","Chairs - height per tendon profile","Spacers - under bottom bars","Cover blocks - correct cover","Concrete C35/45 minimum","Concrete placement avoids ducts","Concrete compaction around anchors","Stressing after 25MPa","Stressing jack calibrated","Stressing sequence as per design","Elongation measured and recorded","Force within ±5%","Wedge seating checked","No slippage during lock-off","Tendon cutting and capping","Anchor grouting","Tendon grouting - cement grout","Tendon grouting - no voids","Striking after full stressing"],"Reinforcement Accessories":["Chairs - continuous plastic 50mm","Chairs - continuous plastic 75mm","Chairs - continuous plastic 100mm","Chairs - individual 50mm","Chairs - individual 75mm","Chairs - individual 100mm","Chairs - individual 125mm","Chairs - individual 150mm","Chairs - 50mm spacing 600x600","Chairs - 75mm spacing 600x600","Chairs - 100mm spacing 600x600","Chairs - 125mm spacing 600x600","Spacers - wheel type 25mm","Spacers - wheel type 30mm","Spacers - wheel type 40mm","Spacers - wheel type 50mm","Spacers - line type 25mm","Spacers - line type 30mm","Spacers - line type 40mm","Spacers - line type 50mm","Cover blocks - 15mm","Cover blocks - 20mm","Cover blocks - 25mm","Cover blocks - 30mm","Cover blocks - 40mm","Cover blocks - 50mm","Cover blocks - circular 25mm","Cover blocks - circular 30mm","Cover blocks - circular 40mm","Top bar support stools 100mm","Top bar support stools 150mm","Top bar support stools 200mm","Rebar tying wire 1.6mm","Rebar tying wire 1.2mm","Tie wire coil 25kg","Couplers 12mm","Couplers 16mm","Couplers 20mm","Couplers 25mm","Couplers 32mm"],
 "Timber Joist Floor":["Setting out - joist positions at 400mm c/c","Joist size and grade checked","Joist span checked against tables","Joist bearing 75mm min on masonry","Joist hangers - correct type and size","Joist hangers - fixed with nails/screws","Rim board/header joist installed","Blocking at midspan","Blocking at supports","Double joists under partitions","Trimmer joists around openings","Doubled joists at stair opening","Decking - T&G boards 25mm","Decking - chipboard 22mm","Decking - plywood 18mm","Decking - screwed not nailed","Decking - adhesive at joints","Expansion gap 10mm perimeter","Acoustic insulation between joists","Fire stopping between joists","Ventilation to floor void","DPC under joists on masonry","Deflection check <span/360"],
 "Bubble Deck Slab":["Setting out - bubble positions","Setting out - bubble size 180-450mm diameter","Setting out - slab thickness","Bubble deck - prefabricated cages delivered","Bubble deck - cages placed on formwork","Bubble deck - cages aligned","Bubble deck - no bubbles floating","Additional reinforcement at columns","Additional reinforcement at openings","Formwork - edge shutters fixed","Concrete C30/37 minimum","Concrete placed carefully - no bubble displacement","Compaction - poker around bubbles","Surface level to FFL","Curing - 7 days minimum","Striking - as per engineer","Weight saving verified - check deflection"]
 };
